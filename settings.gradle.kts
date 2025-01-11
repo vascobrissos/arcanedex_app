@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "arcanedex_app"
 include(":app")
- 
