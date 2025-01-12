@@ -7,7 +7,11 @@
 
     <color name="primary">#5086A2</color>
     <color name="secondary">#324251</color>
+    <color name="terciary">#72BEE7</color>
     <color name="link">#66ABD1</color>
     <color name="hint">#CDCDD0</color>
+    <color name="background_color">#131318</color>
+    <color name="defaultColor">#757575</color> <!-- Example: Gray -->
+
 
 </resources>
