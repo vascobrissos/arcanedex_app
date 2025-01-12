@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">arcanedex_app</string>
+    <string name="entrar">Entrar</string>
+    <string name="palavra_passe">Palavra-passe</string>
 </resources>
