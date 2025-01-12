@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
     android:scrollbars="none">
 
 
@@ -49,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="ARCANEDEX"
+            android:text="@string/title"
             android:textAlignment="center"
             android:textAllCaps="true"
             android:textColor="#FFFFFF"
@@ -65,7 +63,7 @@
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="32dp"
             android:ems="10"
-            android:hint="Nome de utilizador"
+            android:hint="@string/username"
             android:inputType="text"
             android:textAllCaps="true"
             android:textColor="@color/white"
@@ -98,7 +96,7 @@
             android:layout_marginBottom="24dp"
             android:clickable="true"
             android:focusable="true"
-            android:text="Ainda não tens conta? Regista-te!"
+            android:text="@string/noAccount"
             android:textAlignment="center"
             android:textColor="@color/link"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -106,6 +104,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/button"
             app:layout_constraintVertical_bias="0.017" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="clearPrivacy"
+            android:text="Reset Politica"
+            tools:layout_editor_absoluteX="292dp"
+            tools:layout_editor_absoluteY="34dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

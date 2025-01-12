@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
     android:scrollbars="none">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -23,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="130dp"
             android:layout_marginTop="24dp"
-            android:text="Registar"
+            android:text="@string/register"
             android:textColor="@color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -46,7 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Criar Conta"
+            android:text="@string/createAccount"
             android:textAlignment="center"
             android:textAllCaps="true"
             android:textColor="#FFFFFF"
@@ -63,8 +62,8 @@
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="32dp"
             android:ems="10"
-            android:hint="Nome"
-            android:inputType="text"
+            android:hint="@string/name"
+            android:inputType="textCapWords"
             android:textAllCaps="true"
             android:textColor="@color/white"
             android:textSize="15sp"
@@ -79,8 +78,8 @@
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="24dp"
             android:ems="10"
-            android:hint="Apelido"
-            android:inputType="text"
+            android:hint="@string/surname"
+            android:inputType="textCapWords"
             android:textAllCaps="true"
             android:textColor="@color/white"
             android:textSize="15sp"
@@ -95,8 +94,8 @@
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="24dp"
             android:ems="10"
-            android:hint="Email"
-            android:inputType="text"
+            android:hint="@string/email"
+            android:inputType="textEmailAddress"
             android:textAllCaps="true"
             android:textColor="@color/white"
             android:textSize="15sp"
@@ -111,7 +110,7 @@
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="16dp"
             android:ems="10"
-            android:hint="Nome de utilizador"
+            android:hint="@string/username"
             android:inputType="text"
             android:textAllCaps="true"
             android:textColor="@color/white"
@@ -145,7 +144,7 @@
             android:autoLink="none"
             android:clickable="true"
             android:focusable="true"
-            android:text="Já tens conta? Inicia sessão!"
+            android:text="@string/alreadyHasAccount"
             android:textAlignment="center"
             android:textColor="@color/link"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -167,17 +166,18 @@
 
         <TextView
             android:id="@+id/textView3"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="24dp"
-            android:text="Male"
+            android:text="@string/male"
+            android:textColor="@color/white"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/switch1"
             app:layout_constraintTop_toBottomOf="@+id/emailText" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

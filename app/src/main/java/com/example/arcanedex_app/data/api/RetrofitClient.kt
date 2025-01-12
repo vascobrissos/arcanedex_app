@@ -1,4 +1,5 @@
 package com.example.arcanedex_app.data.api
+
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
