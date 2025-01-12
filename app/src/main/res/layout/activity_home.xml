@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Home">
+    tools:context=".Home"
+    android:backgroundTint="@color/white">
 
 
     <FrameLayout
@@ -24,7 +25,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu"
+        app:itemActiveIndicatorStyle="@style/NoActiveIndicatorStyle"
+        app:itemTextColor="@color/itemscolormenu"
+        app:itemIconTint="@color/itemscolormenu"
         >
+
+
 
     </com.google.android.material.bottomnavigation.BottomNavigationView>
 
