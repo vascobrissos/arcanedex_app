@@ -96,7 +96,6 @@
             android:layout_height="22dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="24dp"
-            android:autoLink="none"
             android:clickable="true"
             android:focusable="true"
             android:text="Ainda não tens conta? Regista-te!"

@@ -32,7 +32,18 @@ class MainActivity : AppCompatActivity() {
         // Initialize EditText fields
         usernameText = findViewById(R.id.usernameText)
         passwordText = findViewById(R.id.passwordText)
+
+        // Referência ao TextView
+        val registerTextView = findViewById<TextView>(R.id.registerLink)
+
+        // Definir clique para ir para a RegisterActivity
+        registerTextView.setOnClickListener {
+            val intent = Intent(this, Register::class.java)
+            startActivity(intent)
+        }
     }
+
+
 
     fun buttonClick(view: View?) {
         val username = usernameText.text.toString().trim()
@@ -56,14 +67,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show()
             }
-            // Referência ao TextView
-            val registerTextView = findViewById<TextView>(R.id.registerLink)
 
-            // Definir clique para ir para a RegisterActivity
-            registerTextView.setOnClickListener {
-                val intent = Intent(this, Register::class.java)
-                startActivity(intent)
-            }
         }
+
     }
+
+
+
 }
