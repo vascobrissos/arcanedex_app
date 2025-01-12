@@ -1,20 +1,26 @@
 package com.example.arcanedex_app
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class PrivacyPolicyAgreement : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_privacy_policy_agreement)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        val acceptButton = findViewById<Button>(R.id.acceptButton)
+        acceptButton.setOnClickListener {
+            // Mark terms as accepted
+            SharedPreferencesHelper.setHasAcceptedTerms(this, true)
+
+            // Redirect to MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish() // Close PrivacyPolicyAgreement
         }
     }
 }

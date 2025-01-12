@@ -4,8 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
-import android.widget.Toast
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,9 +13,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.auth0.android.jwt.JWT
 import com.example.arcanedex_app.data.models.LoginRequest
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.example.arcanedex_app.viewmodel.AuthViewModel
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var usernameText: EditText
     private lateinit var passwordText: EditText
     private val authViewModel: AuthViewModel by viewModels()
@@ -23,6 +25,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Check if the user has accepted the terms
+        if (!SharedPreferencesHelper.hasAcceptedTerms(this)) {
+            // Redirect to PrivacyPolicyAgreement
+            val intent = Intent(this, PrivacyPolicyAgreement::class.java)
+            startActivity(intent)
+            finish() // Close MainActivity until terms are accepted
+            return
+        }
+
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -34,16 +46,13 @@ class MainActivity : AppCompatActivity() {
         usernameText = findViewById(R.id.usernameText)
         passwordText = findViewById(R.id.passwordText)
 
-        // Referência ao TextView
+        // Set up Register Link
         val registerTextView = findViewById<TextView>(R.id.registerLink)
-
-        // Definir clique para ir para a RegisterActivity
         registerTextView.setOnClickListener {
             val intent = Intent(this, Register::class.java)
             startActivity(intent)
         }
     }
-
 
     fun buttonClick(view: View?) {
         val username = usernameText.text.toString().trim()
@@ -71,23 +80,19 @@ class MainActivity : AppCompatActivity() {
                     val userId = jwt.getClaim("id").asInt() // Get "id" claim
                     val role = jwt.getClaim("role").asString() // Get "role" claim
 
-                    // Save the token and display decoded values
-                    //SharedPreferencesHelper.saveToken(this, token)
-
                     Toast.makeText(
                         this,
                         "Sessão Iniciada! ID: $userId, Role: $role",
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // Navigate to the dashboard
-                    //navigateToDashboard()
+                    // Saves user token locally
+                    SharedPreferencesHelper.saveToken(this, token)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "Erro ao decodificar token!", Toast.LENGTH_LONG).show()
                 }
             } else {
-                // Display API error message
                 Toast.makeText(
                     this,
                     "Não foi possível iniciar sessão: $errorMessage",
@@ -97,5 +102,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    fun clearPrivacy(view: View?) {
+        SharedPreferencesHelper.setHasAcceptedTerms(this, false)
+    }
 }

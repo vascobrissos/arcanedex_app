@@ -2,6 +2,28 @@
     <string name="app_name">arcanedex_app</string>
     <string name="entrar">Entrar</string>
     <string name="palavra_passe">Palavra-passe</string>
-<!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title">ArcaneDex</string>
+    <string name="username">Nome de Utilizador</string>
+    <string name="noAccount">Ainda não tens conta? Regista-te!</string>
+    <string name="acceptPolicy">Aceitar política de privacidade</string>
+    <string name="register">Registar</string>
+    <string name="createAccount">Criar Conta</string>
+    <string name="name">Nome</string>
+    <string name="surname">Apelido</string>
+    <string name="email">Email</string>
+    <string name="alreadyHasAccount">Já tens conta? Inicia sessão!</string>
+    <string name="male">Masculino</string>
+    <string name="female">Feminino</string>
+
+
+    <string name="privacyPolicy">
+        A sua privacidade é importante para nós. Este documento descreve como recolhemos, utilizamos e protegemos as suas informações pessoais. Ao utilizar esta aplicação, está a aceitar os termos aqui descritos. Recolha de Dados:
+        Recolhemos informações fornecidas voluntariamente, como nome, endereço de e-mail e outros detalhes necessários para criar e gerir a sua conta. Além disso, podemos recolher dados de utilização, como informações sobre como utiliza a aplicação.
+        Utilização de Dados: As suas informações são utilizadas exclusivamente para melhorar a experiência de utilização, oferecer serviços personalizados e comunicar informações importantes. Os seus dados nunca serão vendidos ou partilhados com terceiros sem o seu consentimento explícito.
+        Proteção de Dados: Implementamos medidas técnicas e organizacionais apropriadas para proteger as suas informações contra acesso não autorizado, alteração, divulgação ou destruição.
+        Direitos do Utilizador: Tem o direito de aceder, corrigir ou eliminar os seus dados pessoais a qualquer momento. Para exercer esses direitos, entre em contacto connosco através dos canais indicados na aplicação.
+        Ao aceitar esta política de privacidade, está a autorizar-nos a recolher e utilizar os seus dados nos termos acima descritos. Caso não concorde com algum dos pontos, por favor, não utilize esta aplicação.
+        Esta política pode ser atualizada periodicamente. Recomendamos que reveja este documento regularmente para estar informado sobre quaisquer alterações.
+    </string>
 </resources>
