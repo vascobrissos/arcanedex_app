@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -52,14 +53,22 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines)
 
+    implementation ("androidx.navigation:navigation-fragment-ktx:2.7.1")
+    implementation ("androidx.navigation:navigation-ui-ktx:2.7.1")
+
     // ViewModel (Android Lifecycle)
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
 
+
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+
+
+
+
+    implementation ("com.google.android.material:material:1.10.0")
+
     // JWTDecode
     implementation("com.auth0.android:jwtdecode:2.0.1")
-
-    // Glide
-    implementation ("com.github.bumptech.glide:glide:4.15.1")
 
     // Testing
     testImplementation(libs.junit)

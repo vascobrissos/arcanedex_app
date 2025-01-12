@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:id="@+id/nav_home"
-        android:title="Creatures"
-        android:icon="@drawable/sea_dragon_svgrepo_com">
-    </item>
-
-    <item android:id="@+id/nav_favourites"
-        android:title="Favourites"
-        android:icon="@drawable/baseline_star_border_purple500_24"
-        >
-
-    </item>
-
-    <item android:id="@+id/nav_profile"
-        android:title="Profile"
-        android:icon="@drawable/baseline_person_24"
-        android:itemBackground="@color/black">
-    </item>
+<item
+    android:id="@+id/homeFragment"
+    android:icon="@drawable/sea_dragon_svgrepo_com"
+    android:title="Home" />
+<item
+    android:id="@+id/favouritesFragment"
+    android:icon="@drawable/baseline_person_24"
+    android:title="Favourites" />
+<item
+    android:id="@+id/profileFragment"
+    android:icon="@drawable/baseline_person_24"
+    android:title="Profile" />
 </menu>
