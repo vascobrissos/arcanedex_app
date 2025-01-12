@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         passwordText = findViewById(R.id.passwordText)
     }
 
-    fun buttonClick(view: View?){
+    fun buttonClick(view: View?) {
         val username = usernameText.text.toString().trim()
         val password = passwordText.text.toString().trim()
 
@@ -56,13 +56,14 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show()
             }
-        // Referência ao TextView
-        val registerTextView = findViewById<TextView>(R.id.registerLink)
+            // Referência ao TextView
+            val registerTextView = findViewById<TextView>(R.id.registerLink)
 
-        // Definir clique para ir para a RegisterActivity
-        registerTextView.setOnClickListener {
-            val intent = Intent(this, Register::class.java)
-            startActivity(intent)
+            // Definir clique para ir para a RegisterActivity
+            registerTextView.setOnClickListener {
+                val intent = Intent(this, Register::class.java)
+                startActivity(intent)
+            }
         }
     }
 }
