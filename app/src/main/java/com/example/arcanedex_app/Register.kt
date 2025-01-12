@@ -8,11 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class MainActivity : AppCompatActivity() {
+class Register : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_register)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -20,11 +20,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Referência ao TextView
-        val registerTextView = findViewById<TextView>(R.id.registerLink)
+        val loginTextView = findViewById<TextView>(R.id.loginLink)
 
         // Definir clique para ir para a RegisterActivity
-        registerTextView.setOnClickListener {
-            val intent = Intent(this, Register::class.java)
+        loginTextView.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
     }
