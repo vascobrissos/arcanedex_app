@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
-
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,21 +8,12 @@
     android:fitsSystemWindows="true"
     android:fillViewport="true">
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="130dp"
-        android:layout_marginTop="24dp"
-        android:onClick="buttonClick"
-        android:text="@string/entrar"
-        android:textColor="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/passwordText" />
         android:background="@drawable/login_background"
-        tools:context=".MainActivity">
+        tools:context=".Register">
 
 
         <Button
@@ -34,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="130dp"
             android:layout_marginTop="24dp"
-            android:text="@string/entrar"
+            android:text="Registar"
             android:textColor="@color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -42,36 +30,39 @@
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="682dp"
+            android:layout_width="match_parent"
             android:layout_height="320dp"
             app:layout_constraintEnd_toEndOf="parent"
 
+            app:layout_constraintHorizontal_bias="0.501"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/logo" />
+
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="ARCANEDEX"
+            android:text="Criar Conta"
             android:textAlignment="center"
             android:textAllCaps="true"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
         <EditText
-            android:id="@+id/usernameText"
+            android:id="@+id/firstNameText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="100dp"
             android:layout_marginTop="32dp"
             android:ems="10"
-            android:hint="Nome de utilizador"
+            android:hint="Nome"
             android:inputType="text"
             android:textAllCaps="true"
             android:textColor="@color/white"
@@ -81,11 +72,59 @@
             app:layout_constraintTop_toBottomOf="@+id/textView" />
 
         <EditText
+            android:id="@+id/surnameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="100dp"
+            android:layout_marginTop="24dp"
+            android:ems="10"
+            android:hint="Apelido"
+            android:inputType="text"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/firstNameText" />
+
+        <EditText
+            android:id="@+id/emailText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="100dp"
+            android:layout_marginTop="24dp"
+            android:ems="10"
+            android:hint="Email"
+            android:inputType="text"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/surnameText" />
+
+        <EditText
+            android:id="@+id/usernameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="100dp"
+            android:layout_marginTop="16dp"
+            android:ems="10"
+            android:hint="Nome de utilizador"
+            android:inputType="text"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/switch1" />
+
+        <EditText
             android:id="@+id/passwordText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="100dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:ems="10"
             android:hint="@string/palavra_passe"
             android:inputType="textPassword"
@@ -97,7 +136,7 @@
             app:layout_constraintTop_toBottomOf="@+id/usernameText" />
 
         <TextView
-            android:id="@+id/registerLink"
+            android:id="@+id/loginLink"
             android:layout_width="457dp"
             android:layout_height="22dp"
             android:layout_marginTop="8dp"
@@ -105,14 +144,39 @@
             android:autoLink="none"
             android:clickable="true"
             android:focusable="true"
-            android:text="Ainda não tens conta? Regista-te!"
+            android:text="Já tens conta? Inicia sessão!"
             android:textAlignment="center"
             android:textColor="@color/link"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/button"
-            app:layout_constraintVertical_bias="0.017" />
+            app:layout_goneMarginBottom="300dp" />
+
+        <Switch
+            android:id="@+id/switch1"
+            android:layout_width="97dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.146"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/emailText" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
+            android:text="Male"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/switch1"
+            app:layout_constraintTop_toBottomOf="@+id/emailText" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

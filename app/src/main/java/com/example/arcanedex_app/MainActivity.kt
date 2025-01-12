@@ -1,9 +1,11 @@
 package com.example.arcanedex_app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -54,6 +56,13 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show()
             }
+        // Referência ao TextView
+        val registerTextView = findViewById<TextView>(R.id.registerLink)
+
+        // Definir clique para ir para a RegisterActivity
+        registerTextView.setOnClickListener {
+            val intent = Intent(this, Register::class.java)
+            startActivity(intent)
         }
     }
 }

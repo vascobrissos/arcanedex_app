@@ -8,5 +8,6 @@
     <color name="primary">#5086A2</color>
     <color name="secondary">#324251</color>
     <color name="link">#66ABD1</color>
+    <color name="hint">#CDCDD0</color>
 
 </resources>
