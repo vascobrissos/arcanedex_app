@@ -58,9 +58,11 @@ dependencies {
     // JWTDecode
     implementation("com.auth0.android:jwtdecode:2.0.1")
 
+    // Glide
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
-
