@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity() {
                     val userId = jwt.getClaim("id").asInt() // Get "id" claim
                     val role = jwt.getClaim("role").asString() // Get "role" claim
 
+                    // Show a success message
                     Toast.makeText(
                         this,
                         "Sessão Iniciada! ID: $userId, Role: $role",
@@ -88,11 +89,20 @@ class MainActivity : AppCompatActivity() {
 
                     // Saves user token locally
                     SharedPreferencesHelper.saveToken(this, token)
+
+                    usernameText.setText("")
+                    passwordText.setText("")
+
+                    // Navigate to HomeActivity
+                    val intent = Intent(this, Home::class.java)
+                    intent.putExtra("role", role)
+                    startActivity(intent)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "Erro ao decodificar token!", Toast.LENGTH_LONG).show()
                 }
             } else {
+                // Show the error message returned by the API
                 Toast.makeText(
                     this,
                     "Não foi possível iniciar sessão: $errorMessage",
@@ -100,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
         }
+
     }
 
     fun clearPrivacy(view: View?) {
