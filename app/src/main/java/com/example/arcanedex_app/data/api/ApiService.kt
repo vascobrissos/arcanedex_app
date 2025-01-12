@@ -1,4 +1,5 @@
 package com.example.arcanedex_app.data.api
+
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.data.models.LoginResponse
 import com.example.arcanedex_app.data.models.RegisterRequest

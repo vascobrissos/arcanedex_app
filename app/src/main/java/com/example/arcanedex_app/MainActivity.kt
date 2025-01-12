@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.auth0.android.jwt.JWT
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.viewmodel.AuthViewModel
 
@@ -44,34 +45,57 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     fun buttonClick(view: View?) {
         val username = usernameText.text.toString().trim()
         val password = passwordText.text.toString().trim()
 
-        print("Username:" + username)
-        print("Pass:" + password)
-
-        if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+        // Validate inputs
+        if (username.isEmpty()) {
+            usernameText.error = "Introduza Nome de Utilizador"
+            usernameText.requestFocus()
             return
         }
 
-        // Call the ViewModel to perform the login
-        authViewModel.loginUser(LoginRequest(username, password)) { token ->
-            if (token != null) {
-                // Save the token and navigate to Dashboard
-                //SharedPreferencesHelper.saveToken(this, token)
-                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                //navigateToDashboard()
-            } else {
-                Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show()
-            }
-
+        if (password.isEmpty()) {
+            passwordText.error = "Introduza Password"
+            passwordText.requestFocus()
+            return
         }
 
-    }
+        // Perform login
+        authViewModel.loginUser(LoginRequest(username, password)) { token, errorMessage ->
+            if (token != null) {
+                try {
+                    // Decode the JWT token
+                    val jwt = JWT(token)
+                    val userId = jwt.getClaim("id").asInt() // Get "id" claim
+                    val role = jwt.getClaim("role").asString() // Get "role" claim
 
+                    // Save the token and display decoded values
+                    //SharedPreferencesHelper.saveToken(this, token)
+
+                    Toast.makeText(
+                        this,
+                        "Sessão Iniciada! ID: $userId, Role: $role",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Navigate to the dashboard
+                    //navigateToDashboard()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Erro ao decodificar token!", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                // Display API error message
+                Toast.makeText(
+                    this,
+                    "Não foi possível iniciar sessão: $errorMessage",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
 
 
 }

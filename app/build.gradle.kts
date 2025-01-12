@@ -55,8 +55,12 @@ dependencies {
     // ViewModel (Android Lifecycle)
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
 
+    // JWTDecode
+    implementation("com.auth0.android:jwtdecode:2.0.1")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+
