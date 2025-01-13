@@ -1,7 +1,6 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,22 +10,23 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.arcanedex_app.CardAdapter
+import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
-import com.example.arcanedex_app.data.database.AppDatabase
-import com.example.arcanedex_app.data.models.ArcaneEntity
+import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class HomeFragment : Fragment() {
+class FavouritesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private lateinit var adapter: CardAdapter
-    private val cardItems = mutableListOf<CardItem>() // Full list for non-favorites
+    private val cardItems = mutableListOf<CardItem>() // Full list for favorites
     private val filteredItems = mutableListOf<CardItem>() // Filtered list for display
     private var isLoading = false // To prevent multiple simultaneous loads
     private var currentPage = 1 // Current page for pagination
@@ -36,7 +36,7 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        return inflater.inflate(R.layout.fragment_favourites, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,13 +52,28 @@ class HomeFragment : Fragment() {
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
-                findNavController().navigate(R.id.action_homeFragment_to_detailFragment, bundle)
+                findNavController().navigate(
+                    R.id.action_favouritesFragment_to_detailFragment,
+                    bundle
+                )
             },
             onFavoriteToggle = { favoriteItem ->
+                // Atualizar o estado local
                 favoriteItem.isFavorite = !favoriteItem.isFavorite
-                adapter.notifyDataSetChanged()
+                // Remover o item da lista de favoritos
+                if (!favoriteItem.isFavorite) {
+                    cardItems.remove(favoriteItem)
+                    filteredItems.remove(favoriteItem)
+                    adapter.notifyDataSetChanged()
+                }
+
+                if (favoriteItem.isFavorite) {
+                    addCreatureToFavorites(favoriteItem.Id)
+                } else {
+                    removeCreatureFromFavorites(favoriteItem.Id)
+                }
             },
-            showFavorites = false
+            showFavorites = true // Exibe apenas os favoritos
         )
 
         recyclerView.adapter = adapter
@@ -73,6 +88,12 @@ class HomeFragment : Fragment() {
 
                 // Trigger loading more data when the user scrolls to the bottom
                 if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount && cardItems.size < totalRecords) {
+                    Toast.makeText(
+                        requireContext(),
+                        "cards" + cardItems.size + " totalrecords: " + totalRecords,
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
                     loadMoreData()
                 }
             }
@@ -90,18 +111,14 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // Load the first page of data
-        if (cardItems.isEmpty()) {
-            loadMoreData()
-        }
+        loadMoreData()
     }
 
     private fun loadMoreData() {
-        if (isLoading) return // Prevent multiple requests
         isLoading = true
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // Get the token from SharedPreferences
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
@@ -111,31 +128,31 @@ class HomeFragment : Fragment() {
                     isLoading = false
                     return@launch
                 }
-
+                // Buscar dados da API
                 val response = RetrofitClient.instance.getAllCreatures(
                     token = "Bearer $token",
                     page = currentPage,
-                    limit = 4
+                    limit = 6 // Exemplo de paginação
                 )
+
 
                 totalRecords = response.count
 
                 withContext(Dispatchers.Main) {
-                    val newCardItems = response.data.map { creature ->
-                        CardItem(
-                            Id = creature.Id,
-                            Name = creature.Name,
-                            Img = creature.Img,
-                            Lore = creature.Lore,
-                            isFavorite = creature.isFavorite
-                        )
-                    }
+                    val newCardItems = response.data
+                        .filter { it.isFavoriteToUser } // Apenas os favoritos
+                        .map { creature ->
+                            CardItem(
+                                Id = creature.Id,
+                                Name = creature.Name,
+                                Img = creature.Img,
+                                Lore = creature.Lore,
+                                isFavorite = creature.isFavoriteToUser
+                            )
+                        }
 
-                    saveToCache(newCardItems) // Salvar no cache
-
-                    val nonFavoriteItems = newCardItems.filter { !it.isFavorite }
-                    cardItems.addAll(nonFavoriteItems)
-                    filteredItems.addAll(nonFavoriteItems)
+                    cardItems.addAll(newCardItems)
+                    filteredItems.addAll(newCardItems)
                     adapter.notifyDataSetChanged()
 
                     currentPage++
@@ -144,6 +161,7 @@ class HomeFragment : Fragment() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     e.printStackTrace()
+
                     Toast.makeText(
                         requireContext(),
                         "Error: ${e.localizedMessage}",
@@ -169,42 +187,79 @@ class HomeFragment : Fragment() {
         adapter.notifyDataSetChanged()
     }
 
-    private fun saveToCache(cardItems: List<CardItem>) {
+    private fun addCreatureToFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
-            val db = AppDatabase.getDatabase(requireContext())
-            val entities = cardItems.map { item ->
-                ArcaneEntity(
-                    id = item.Id,
-                    name = item.Name,
-                    img = item.Img,
-                    lore = item.Lore
+            try {
+                val response = RetrofitClient.instance.addCreatureToFavorites(
+                    token = "Bearer $token",
+                    favoriteRequest = FavoriteRequest(CreatureId = creatureId)
                 )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT)
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to add to favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-            db.arcaneDao().insertAll(entities)
         }
     }
 
-    private fun loadFromCache() {
+    private fun removeCreatureFromFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
-            val db = AppDatabase.getDatabase(requireContext())
-            val cachedItems = db.arcaneDao().getAllArcanes()
-
-            withContext(Dispatchers.Main) {
-                val cachedCardItems = cachedItems.map { entity ->
-                    CardItem(
-                        Id = entity.id,
-                        Name = entity.name,
-                        Img = entity.img,
-                        Lore = entity.lore,
-                        isFavorite = false
-                    )
+            try {
+                val response = RetrofitClient.instance.removeCreatureFromFavorites(
+                    token = "Bearer $token",
+                    creatureId = creatureId
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Removed from favorites",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to remove from favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-
-                cardItems.clear()
-                filteredItems.clear()
-                cardItems.addAll(cachedCardItems)
-                filteredItems.addAll(cachedCardItems)
-                adapter.notifyDataSetChanged()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }

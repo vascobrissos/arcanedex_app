@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.fragments
 
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +17,7 @@ import com.example.arcanedex_app.data.models.UserProfileRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.example.arcanedex_app.viewmodel.ProfileViewModel
 import androidx.navigation.fragment.findNavController
+import com.example.arcanedex_app.R
 
 class ProfileFragment : Fragment() {
 

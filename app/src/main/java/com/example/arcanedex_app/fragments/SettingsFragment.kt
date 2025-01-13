@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.fragments
 
 import android.content.Intent
 import android.net.Uri
@@ -11,6 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.arcanedex_app.R
+import com.example.arcanedex_app.activities.MainActivity
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class SettingsFragment : Fragment() {
@@ -51,13 +53,13 @@ class SettingsFragment : Fragment() {
 
         logoutButton.setOnClickListener {
             Toast.makeText(context, "Logout realizado", Toast.LENGTH_SHORT).show()
-            logoutUser(view)
+            logoutUser()
         }
 
         return view
     }
 
-    private fun logoutUser(view: View?) {
+    private fun logoutUser() {
         // Clear saved preferences (example: hasAcceptedTerms or token)
         SharedPreferencesHelper.clearToken(requireContext())
 

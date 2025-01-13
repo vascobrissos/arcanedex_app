@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.auth0.android.jwt.JWT
+import com.example.arcanedex_app.fragments.PrivacyPolicyAgreement
+import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.example.arcanedex_app.viewmodel.AuthViewModel
@@ -28,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         if (!SharedPreferencesHelper.isInternetAvailable(this)) {
-            // Redirecionar para com.example.arcanedex_app.OfflineActivity
+            // Redirecionar para com.example.arcanedex_app.activities.OfflineActivity
             val intent = Intent(this, OfflineActivity::class.java)
             startActivity(intent)
             return

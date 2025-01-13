@@ -1,9 +1,11 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.fragments
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.arcanedex_app.R
+import com.example.arcanedex_app.activities.MainActivity
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class PrivacyPolicyAgreement : AppCompatActivity() {

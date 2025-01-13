@@ -1,6 +1,7 @@
 package com.example.arcanedex_app.data.api
 
 import com.example.arcanedex_app.data.models.CreatureResponse
+import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.data.models.LoginResponse
 import com.example.arcanedex_app.data.models.RegisterRequest
@@ -9,10 +10,12 @@ import com.example.arcanedex_app.data.models.UserProfileRequest
 import com.example.arcanedex_app.data.models.UserProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -40,4 +43,15 @@ interface ApiService {
         @Body userProfile: UserProfileRequest
     ): Response<UserProfileResponse>
 
+    @POST("creatures/favourites")
+    suspend fun addCreatureToFavorites(
+        @Header("Authorization") token: String,
+        @Body favoriteRequest: FavoriteRequest
+    ): Response<Unit>
+
+    @DELETE("creatures/favourites/{id}")
+    suspend fun removeCreatureFromFavorites(
+        @Header("Authorization") token: String,
+        @Path("id") creatureId: Int
+    ): Response<Unit>
 }

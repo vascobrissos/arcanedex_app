@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.CardItem
 
 class DetailFragment : Fragment() {

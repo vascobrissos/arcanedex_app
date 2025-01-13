@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.arcanedex_app.data.models.RegisterRequest
 import com.example.arcanedex_app.viewmodel.AuthViewModel
 import androidx.activity.viewModels
+import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class Register : AppCompatActivity() {

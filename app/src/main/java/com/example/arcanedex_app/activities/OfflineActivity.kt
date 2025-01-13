@@ -1,4 +1,4 @@
-package com.example.arcanedex_app
+package com.example.arcanedex_app.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.arcanedex_app.CardAdapter
+import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.database.AppDatabase
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
