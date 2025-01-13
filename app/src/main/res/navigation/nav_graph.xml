@@ -29,7 +29,20 @@
     </fragment>
 
     <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.arcanedex_app.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.arcanedex_app.ProfileFragment"
-        android:label="ProfileFragment" />
+        android:label="ProfileFragment" >
+    <action
+        android:id="@+id/action_profileFragment_to_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    </fragment>
 </navigation>
