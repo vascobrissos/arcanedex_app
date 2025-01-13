@@ -1,7 +1,6 @@
 package com.example.arcanedex_app
 
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +15,7 @@ import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
 import com.example.arcanedex_app.data.database.AppDatabase
 import com.example.arcanedex_app.data.models.ArcaneEntity
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,10 +26,11 @@ class HomeFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private lateinit var adapter: CardAdapter
-    private val cardItems = mutableListOf<CardItem>() // Full list for all items
+    private val cardItems = mutableListOf<CardItem>() // Full list for non-favorites
     private val filteredItems = mutableListOf<CardItem>() // Filtered list for display
     private var isLoading = false // To prevent multiple simultaneous loads
     private var currentPage = 1 // Current page for pagination
+    private var totalRecords = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,13 +46,22 @@ class HomeFragment : Fragment() {
         searchView = view.findViewById(R.id.search_bar)
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        // Initialize adapter with filteredItems and click listener
-        adapter = CardAdapter(filteredItems) { clickedItem ->
-            val bundle = Bundle().apply {
-                putParcelable("cardItem", clickedItem)
-            }
-            findNavController().navigate(R.id.action_homeFragment_to_detailFragment, bundle)
-        }
+        adapter = CardAdapter(
+            items = filteredItems,
+            onItemClick = { clickedItem ->
+                val bundle = Bundle().apply {
+                    putParcelable("cardItem", clickedItem)
+                }
+                findNavController().navigate(R.id.action_homeFragment_to_detailFragment, bundle)
+            },
+            onFavoriteToggle = { favoriteItem ->
+                // Atualizar o estado local
+                favoriteItem.isFavorite = !favoriteItem.isFavorite
+                adapter.notifyDataSetChanged()
+                // Você também pode atualizar o status no servidor se necessário
+            },
+            showFavorites = false // Exibe apenas os não favoritos
+        )
 
         recyclerView.adapter = adapter
 
@@ -64,13 +74,15 @@ class HomeFragment : Fragment() {
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
                 // Trigger loading more data when the user scrolls to the bottom
-                if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount || cardItems.size < totalItemCount) {
+                if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount && cardItems.size < totalRecords) {
+                    Toast.makeText(requireContext(), "cards" + cardItems.size + " totalrecords: " + totalRecords, Toast.LENGTH_SHORT)
+                        .show()
                     loadMoreData()
                 }
             }
         })
 
-        // Set up SearchView listener
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 filterCards(query)
@@ -83,41 +95,49 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // Load the initial data
-        loadMoreData()
+        loadMoreData() // Buscar dados da API
     }
 
     private fun loadMoreData() {
-
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Fetch data from API
+
+                // Get the token from SharedPreferences
+                val token = SharedPreferencesHelper.getToken(requireContext())
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    isLoading = false
+                    return@launch
+                }
+                // Buscar dados da API
                 val response = RetrofitClient.instance.getAllCreatures(
+                    token = "Bearer $token",
                     page = currentPage,
-                    limit = 6 // Load 6 items per page
+                    limit = 6 // Exemplo de paginação
                 )
 
+                totalRecords = response.count
+
                 withContext(Dispatchers.Main) {
-                    // Map API response (Creature) to CardItem
                     val newCardItems = response.data.map { creature ->
                         CardItem(
                             Id = creature.Id,
                             Name = creature.Name,
-                            Img = creature.Img, // Img is already a base64 string
-                            Lore = creature.Lore
+                            Img = creature.Img,
+                            Lore = creature.Lore,
+                            isFavorite = creature.isFavorite
                         )
                     }
 
-                    saveToCache(newCardItems)
+                    saveToCache(newCardItems) // Salvar no cache
 
-                    Log.d("ArcaneDao", "Inserting data: $newCardItems")
-
-                    // Add new items to the full list
-                    cardItems.addAll(newCardItems)
-
-                    // Add new items to the filtered list (only if no query is active)
-                    filteredItems.addAll(newCardItems)
+                    val nonFavoriteItems = newCardItems.filter { !it.isFavorite } // Apenas os não favoritos
+                    cardItems.addAll(nonFavoriteItems)
+                    filteredItems.addAll(nonFavoriteItems)
                     adapter.notifyDataSetChanged()
 
                     currentPage++
@@ -143,10 +163,8 @@ class HomeFragment : Fragment() {
         filteredItems.clear()
 
         if (searchText.isEmpty()) {
-            // If no query, show all items
             filteredItems.addAll(cardItems)
         } else {
-            // Filter by name
             val filtered = cardItems.filter { it.Name.lowercase().contains(searchText) }
             filteredItems.addAll(filtered)
         }
@@ -165,9 +183,32 @@ class HomeFragment : Fragment() {
                     lore = item.Lore
                 )
             }
-            //db.arcaneDao().clearCache() // Limpar cache antigo
             db.arcaneDao().insertAll(entities) // Inserir novo cache
         }
     }
 
+    private fun loadFromCache() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(requireContext())
+            val cachedItems = db.arcaneDao().getAllArcanes() // Obter todos os itens do cache
+
+            withContext(Dispatchers.Main) {
+                val cachedCardItems = cachedItems.map { entity ->
+                    CardItem(
+                        Id = entity.id,
+                        Name = entity.name,
+                        Img = entity.img,
+                        Lore = entity.lore,
+                        isFavorite = false // Não consideramos favoritos no Offline
+                    )
+                }
+
+                cardItems.clear()
+                filteredItems.clear()
+                cardItems.addAll(cachedCardItems)
+                filteredItems.addAll(cachedCardItems)
+                adapter.notifyDataSetChanged()
+            }
+        }
+    }
 }

@@ -12,6 +12,7 @@
     <color name="hint">#CDCDD0</color>
     <color name="background_color">#131318</color>
     <color name="defaultColor">#757575</color> <!-- Example: Gray -->
+    <color name="golden">#FFD700</color> <!-- Example: Gray -->
 
 
 </resources>

@@ -8,5 +8,6 @@ data class CardItem(
     val Id: Int,
     val Name: String,
     val Img: String?,
-    val Lore: String
+    val Lore: String,
+    var isFavorite: Boolean
 ) : Parcelable
