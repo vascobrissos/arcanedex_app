@@ -91,4 +91,11 @@ object SharedPreferencesHelper {
         val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
         return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
+
+    fun isPasswordValid(password: String): Boolean {
+        // At least 8 characters and one special character
+        val passwordPattern = Regex("^(?=.*[@#\$%^&+=!]).{8,}$")
+        return passwordPattern.matches(password)
+    }
+
 }

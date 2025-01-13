@@ -16,6 +16,7 @@ import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
 import com.example.arcanedex_app.data.database.AppDatabase
 import com.example.arcanedex_app.data.models.ArcaneEntity
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -88,12 +89,23 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadMoreData() {
-
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Fetch data from API
+                // Get the token from SharedPreferences
+                val token = SharedPreferencesHelper.getToken(requireContext())
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    isLoading = false
+                    return@launch
+                }
+
+                // Fetch data from API with the token
                 val response = RetrofitClient.instance.getAllCreatures(
+                    token = "Bearer $token", // Add token to the request
                     page = currentPage,
                     limit = 6 // Load 6 items per page
                 )
@@ -137,6 +149,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
 
     private fun filterCards(query: String?) {
         val searchText = query?.trim()?.lowercase() ?: ""

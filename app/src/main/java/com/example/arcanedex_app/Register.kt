@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.arcanedex_app.data.models.RegisterRequest
 import com.example.arcanedex_app.viewmodel.AuthViewModel
 import androidx.activity.viewModels
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class Register : AppCompatActivity() {
 
@@ -79,6 +80,16 @@ class Register : AppCompatActivity() {
         // Validate inputs
         if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!SharedPreferencesHelper.isPasswordValid(password)) {
+            Toast.makeText(
+                this,
+                "Password must be at least 8 characters long and contain a special character.",
+                Toast.LENGTH_SHORT
+            ).show()
+
             return
         }
 
