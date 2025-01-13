@@ -1,9 +1,12 @@
 package com.example.arcanedex_app.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -14,10 +17,11 @@ import com.example.arcanedex_app.CardAdapter
 import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
-import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -25,12 +29,14 @@ class FavouritesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
+    private lateinit var loadingSpinner: ProgressBar
+    private lateinit var loadMoreButton: Button
     private lateinit var adapter: CardAdapter
-    private val cardItems = mutableListOf<CardItem>() // Full list for favorites
-    private val filteredItems = mutableListOf<CardItem>() // Filtered list for display
-    private var isLoading = false // To prevent multiple simultaneous loads
+    private var searchJob: Job? = null
+    private var name = ""
+    private val cardItems = mutableListOf<CardItem>()
     private var currentPage = 1 // Current page for pagination
-    private var totalRecords = 0
+    private var isLoading = false // To prevent multiple simultaneous requests
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,187 +50,222 @@ class FavouritesFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerview)
         searchView = view.findViewById(R.id.search_bar)
+        loadMoreButton = view.findViewById(R.id.load_more_button)
+        loadingSpinner = view.findViewById(R.id.loading_spinner)
+
+        recyclerView.visibility = View.GONE
+        loadMoreButton.visibility = View.GONE
+        loadingSpinner.visibility = View.VISIBLE
+
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
+        loadMoreButton.setOnClickListener {
+            loadFavourites(name)
+        }
+
         adapter = CardAdapter(
-            items = filteredItems,
+            items = cardItems,
             onItemClick = { clickedItem ->
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
-                findNavController().navigate(
-                    R.id.action_favouritesFragment_to_detailFragment,
-                    bundle
-                )
+                findNavController().navigate(R.id.action_favouritesFragment_to_detailFragment, bundle)
             },
             onFavoriteToggle = { favoriteItem ->
-                // Atualizar o estado local
-                favoriteItem.isFavorite = !favoriteItem.isFavorite
-                // Remover o item da lista de favoritos
-                if (!favoriteItem.isFavorite) {
-                    cardItems.remove(favoriteItem)
-                    filteredItems.remove(favoriteItem)
-                    adapter.notifyDataSetChanged()
-                }
-
-                if (favoriteItem.isFavorite) {
-                    addCreatureToFavorites(favoriteItem.Id)
-                } else {
-                    removeCreatureFromFavorites(favoriteItem.Id)
-                }
+                removeFavorite(favoriteItem.Id)
             },
-            showFavorites = true // Exibe apenas os favoritos
+            showFavorites = true
         )
 
         recyclerView.adapter = adapter
 
-        // Set scroll listener for infinite scrolling
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as GridLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-                // Trigger loading more data when the user scrolls to the bottom
-                if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount && cardItems.size < totalRecords) {
-                    Toast.makeText(
-                        requireContext(),
-                        "cards" + cardItems.size + " totalrecords: " + totalRecords,
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                    loadMoreData()
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                loadMoreButton.visibility = View.GONE
+            } else {
+                if (searchView.query.isNullOrEmpty()) {
+                    loadMoreButton.visibility = View.VISIBLE // Mostra o botão somente se a busca estiver vazia
                 }
             }
-        })
+        }
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                filterCards(query)
+                performSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                filterCards(newText)
+                searchJob?.cancel() // Cancela a pesquisa anterior, se estiver em andamento
+                searchJob = CoroutineScope(Dispatchers.Main).launch {
+                    delay(300) // Atraso de 300ms
+                    performSearch(newText)
+                }
                 return true
             }
         })
 
-        loadMoreData()
+        // Load the first page of data
+        if (cardItems.isEmpty()) {
+            loadFavourites(name)
+        }
+
     }
 
-    private fun loadMoreData() {
+
+
+    private fun loadFavourites(name: String) {
+        if (isLoading) return // Prevent simultaneous requests
         isLoading = true
+
+        loadingSpinner.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+        loadMoreButton.visibility = View.GONE
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Get the token from SharedPreferences
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
                     }
                     isLoading = false
                     return@launch
                 }
-                // Buscar dados da API
+
                 val response = RetrofitClient.instance.getAllCreatures(
                     token = "Bearer $token",
                     page = currentPage,
-                    limit = 6 // Exemplo de paginação
+                    limit = 6,
+                    name = name,
+                    onlyFavoriteArcanes = true, // Somente favoritos
+                    toSaveOffline = false
                 )
 
-
-                totalRecords = response.count
+                Log.d("LoadFavourites", "Response: ${response.data}")
 
                 withContext(Dispatchers.Main) {
-                    val newCardItems = response.data
-                        .filter { it.isFavoriteToUser } // Apenas os favoritos
-                        .map { creature ->
-                            CardItem(
-                                Id = creature.Id,
-                                Name = creature.Name,
-                                Img = creature.Img,
-                                Lore = creature.Lore,
-                                isFavorite = creature.isFavoriteToUser
-                            )
-                        }
+                    val newCardItems = response.data.map { creature ->
+                        CardItem(
+                            Id = creature.Id,
+                            Name = creature.Name,
+                            Img = creature.Img,
+                            Lore = creature.Lore,
+                            isFavorite = creature.isFavoriteToUser
+                        )
+                    }
 
                     cardItems.addAll(newCardItems)
-                    filteredItems.addAll(newCardItems)
                     adapter.notifyDataSetChanged()
 
                     currentPage++
                     isLoading = false
+
+                    loadingSpinner.visibility = View.GONE
+
+                    if (cardItems.isEmpty()) {
+                        Toast.makeText(
+                            requireContext(),
+                            "No favorites to display!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        recyclerView.visibility = View.VISIBLE
+                    }
+
+                    loadMoreButton.visibility =
+                        if (cardItems.size >= response.count) View.GONE else View.VISIBLE
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     e.printStackTrace()
-
                     Toast.makeText(
                         requireContext(),
                         "Error: ${e.localizedMessage}",
                         Toast.LENGTH_LONG
                     ).show()
                     isLoading = false
+                    loadingSpinner.visibility = View.GONE
                 }
             }
         }
     }
 
-    private fun filterCards(query: String?) {
-        val searchText = query?.trim()?.lowercase() ?: ""
-        filteredItems.clear()
-
-        if (searchText.isEmpty()) {
-            filteredItems.addAll(cardItems)
-        } else {
-            val filtered = cardItems.filter { it.Name.lowercase().contains(searchText) }
-            filteredItems.addAll(filtered)
-        }
-
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun addCreatureToFavorites(creatureId: Int) {
-        val token = SharedPreferencesHelper.getToken(requireContext())
-        if (token == null) {
-            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+    private fun performSearch(query: String?) {
+        if (query.isNullOrEmpty()) {
+            refreshData()
             return
         }
 
+        // Ocultar o botão de Load More durante a busca
+        loadMoreButton.visibility = View.GONE
+        loadingSpinner.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+
+        cardItems.clear()
+        adapter.notifyDataSetChanged()
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitClient.instance.addCreatureToFavorites(
-                    token = "Bearer $token",
-                    favoriteRequest = FavoriteRequest(CreatureId = creatureId)
-                )
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to add to favorites: ${response.message()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                val token = SharedPreferencesHelper.getToken(requireContext())
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
                     }
+                    return@launch
+                }
+
+                val response = RetrofitClient.instance.getAllCreatures(
+                    token = "Bearer $token",
+                    page = 1, // Sempre inicia na primeira página ao buscar
+                    limit = 6,
+                    onlyFavoriteArcanes = true, // Apenas favoritos
+                    toSaveOffline = false,
+                    name = query
+                )
+
+                withContext(Dispatchers.Main) {
+                    val searchResults = response.data.map { creature ->
+                        CardItem(
+                            Id = creature.Id,
+                            Name = creature.Name,
+                            Img = creature.Img,
+                            Lore = creature.Lore,
+                            isFavorite = creature.isFavoriteToUser
+                        )
+                    }
+
+                    cardItems.clear()
+                    cardItems.addAll(searchResults)
+                    adapter.notifyDataSetChanged()
+
+                    recyclerView.visibility = View.VISIBLE
+                    loadingSpinner.visibility = View.GONE
+                    loadMoreButton.visibility = View.GONE // Garante que o botão não reapareça
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    e.printStackTrace()
                     Toast.makeText(
                         requireContext(),
                         "Error: ${e.localizedMessage}",
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_LONG
                     ).show()
+                    loadingSpinner.visibility = View.GONE
                 }
             }
         }
     }
 
-    private fun removeCreatureFromFavorites(creatureId: Int) {
+
+    private fun refreshData() {
+        currentPage = 1
+        cardItems.clear()
+        loadFavourites(name)
+    }
+
+    private fun removeFavorite(creatureId: Int) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
             Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
@@ -237,6 +278,7 @@ class FavouritesFragment : Fragment() {
                     token = "Bearer $token",
                     creatureId = creatureId
                 )
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         Toast.makeText(
@@ -244,6 +286,7 @@ class FavouritesFragment : Fragment() {
                             "Removed from favorites",
                             Toast.LENGTH_SHORT
                         ).show()
+                        refreshData()
                     } else {
                         Toast.makeText(
                             requireContext(),

@@ -29,7 +29,10 @@ interface ApiService {
     suspend fun getAllCreatures(
         @Header("Authorization") token: String,
         @Query("page") page: Int,
-        @Query("limit") limit: Int
+        @Query("limit") limit: Int,
+        @Query("name") name: String,
+        @Query("OnlyFavoriteArcanes") onlyFavoriteArcanes: Boolean,
+        @Query("ToSaveOffline") toSaveOffline: Boolean,
     ): CreatureResponse
 
     @GET("users/profile")

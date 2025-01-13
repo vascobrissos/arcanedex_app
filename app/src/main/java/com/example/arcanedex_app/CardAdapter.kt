@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.example.arcanedex_app.data.CardItem
 
 class CardAdapter(
-    private val items: List<CardItem>,
+    private val items: MutableList<CardItem>,
     private val onItemClick: (CardItem) -> Unit,
     private val onFavoriteToggle: (CardItem) -> Unit,
     private val showFavorites: Boolean // Novo parâmetro para exibir ou ocultar estrelas
@@ -57,4 +57,11 @@ class CardAdapter(
     }
 
     override fun getItemCount(): Int = items.size
+
+    // Novo método para atualizar os itens
+    fun updateItems(newItems: List<CardItem>) {
+        items.clear() // Limpa os itens atuais
+        items.addAll(newItems) // Adiciona os novos itens
+        notifyDataSetChanged() // Notifica o adaptador sobre as mudanças
+    }
 }
