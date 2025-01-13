@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
+import com.example.arcanedex_app.data.database.AppDatabase
+import com.example.arcanedex_app.data.models.ArcaneEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -106,6 +108,10 @@ class HomeFragment : Fragment() {
                         )
                     }
 
+                    saveToCache(newCardItems)
+
+                    Log.d("ArcaneDao", "Inserting data: $newCardItems")
+
                     // Add new items to the full list
                     cardItems.addAll(newCardItems)
 
@@ -146,4 +152,21 @@ class HomeFragment : Fragment() {
 
         adapter.notifyDataSetChanged()
     }
+
+    private fun saveToCache(cardItems: List<CardItem>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(requireContext())
+            val entities = cardItems.map { item ->
+                ArcaneEntity(
+                    id = item.Id,
+                    name = item.Name,
+                    img = item.Img,
+                    lore = item.Lore
+                )
+            }
+            //db.arcaneDao().clearCache() // Limpar cache antigo
+            db.arcaneDao().insertAll(entities) // Inserir novo cache
+        }
+    }
+
 }

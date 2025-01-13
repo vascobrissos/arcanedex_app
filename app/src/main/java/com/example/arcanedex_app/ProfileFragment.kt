@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
@@ -14,11 +15,18 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        val view = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        // Find the button and set its click listener
+        val logoutButton: Button = view.findViewById(R.id.logoutButton)
+        logoutButton.setOnClickListener {
+            logoutUser()
+        }
+
+        return view
     }
 
-    fun logout(view: View?) {
+    private fun logoutUser() {
         // Clear saved preferences (example: hasAcceptedTerms or token)
         SharedPreferencesHelper.clearToken(requireContext())
 
