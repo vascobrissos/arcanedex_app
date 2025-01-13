@@ -55,12 +55,10 @@ class HomeFragment : Fragment() {
                 findNavController().navigate(R.id.action_homeFragment_to_detailFragment, bundle)
             },
             onFavoriteToggle = { favoriteItem ->
-                // Atualizar o estado local
                 favoriteItem.isFavorite = !favoriteItem.isFavorite
                 adapter.notifyDataSetChanged()
-                // Você também pode atualizar o status no servidor se necessário
             },
-            showFavorites = false // Exibe apenas os não favoritos
+            showFavorites = false
         )
 
         recyclerView.adapter = adapter
@@ -75,13 +73,10 @@ class HomeFragment : Fragment() {
 
                 // Trigger loading more data when the user scrolls to the bottom
                 if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount && cardItems.size < totalRecords) {
-                    Toast.makeText(requireContext(), "cards" + cardItems.size + " totalrecords: " + totalRecords, Toast.LENGTH_SHORT)
-                        .show()
                     loadMoreData()
                 }
             }
         })
-
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -95,14 +90,18 @@ class HomeFragment : Fragment() {
             }
         })
 
-        loadMoreData() // Buscar dados da API
+        // Load the first page of data
+        if (cardItems.isEmpty()) {
+            loadMoreData()
+        }
     }
 
     private fun loadMoreData() {
+        if (isLoading) return // Prevent multiple requests
         isLoading = true
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Get the token from SharedPreferences
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
@@ -113,12 +112,10 @@ class HomeFragment : Fragment() {
                     return@launch
                 }
 
-                // Fetch data from API with the token
                 val response = RetrofitClient.instance.getAllCreatures(
-                    token = "Bearer $token", // Add token to the request
-
+                    token = "Bearer $token",
                     page = currentPage,
-                    limit = 6 // Exemplo de paginação
+                    limit = 4
                 )
 
                 totalRecords = response.count
@@ -136,7 +133,7 @@ class HomeFragment : Fragment() {
 
                     saveToCache(newCardItems) // Salvar no cache
 
-                    val nonFavoriteItems = newCardItems.filter { !it.isFavorite } // Apenas os não favoritos
+                    val nonFavoriteItems = newCardItems.filter { !it.isFavorite }
                     cardItems.addAll(nonFavoriteItems)
                     filteredItems.addAll(nonFavoriteItems)
                     adapter.notifyDataSetChanged()
@@ -147,7 +144,6 @@ class HomeFragment : Fragment() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     e.printStackTrace()
-
                     Toast.makeText(
                         requireContext(),
                         "Error: ${e.localizedMessage}",
@@ -158,7 +154,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
 
     private fun filterCards(query: String?) {
         val searchText = query?.trim()?.lowercase() ?: ""
@@ -185,14 +180,14 @@ class HomeFragment : Fragment() {
                     lore = item.Lore
                 )
             }
-            db.arcaneDao().insertAll(entities) // Inserir novo cache
+            db.arcaneDao().insertAll(entities)
         }
     }
 
     private fun loadFromCache() {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(requireContext())
-            val cachedItems = db.arcaneDao().getAllArcanes() // Obter todos os itens do cache
+            val cachedItems = db.arcaneDao().getAllArcanes()
 
             withContext(Dispatchers.Main) {
                 val cachedCardItems = cachedItems.map { entity ->
@@ -201,7 +196,7 @@ class HomeFragment : Fragment() {
                         Name = entity.name,
                         Img = entity.img,
                         Lore = entity.lore,
-                        isFavorite = false // Não consideramos favoritos no Offline
+                        isFavorite = false
                     )
                 }
 
