@@ -29,7 +29,7 @@ class DetailFragment : Fragment() {
         val imageView = view.findViewById<ImageView>(R.id.imageView)
 
         titleTextView.text = cardItem?.Name
-        descriptionTextView.text = "Descrição do card: ${cardItem?.Lore}"
+        descriptionTextView.text = "${cardItem?.Lore}"
 
         cardItem?.Img?.let { img ->
             Glide.with(requireContext())

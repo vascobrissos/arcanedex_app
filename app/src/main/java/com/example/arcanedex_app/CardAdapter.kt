@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.arcanedex_app.data.CardItem
@@ -57,6 +59,9 @@ class CardAdapter(
         holder.favoriteButton.setOnClickListener {
             cardItem.isFavorite = !cardItem.isFavorite // Atualiza o estado local
             onFavoriteToggle(cardItem) // Notifica o fragmento para atualizar os favoritos
+
+            // Mostrar mensagem de Toast para indicar o clique
+            Toast.makeText(holder.itemView.context, "Estado favorito alterado!" + cardItem.Id, Toast.LENGTH_SHORT).show()
             notifyItemChanged(position) // Atualiza visualmente o item alterado
         }
 
