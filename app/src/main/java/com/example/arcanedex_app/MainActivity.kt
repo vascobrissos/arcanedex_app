@@ -11,11 +11,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.fragment.NavHostFragment
 import com.auth0.android.jwt.JWT
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.example.arcanedex_app.viewmodel.AuthViewModel
+import java.util.Date
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +27,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        if (!SharedPreferencesHelper.isInternetAvailable(this)) {
+            // Redirecionar para com.example.arcanedex_app.OfflineActivity
+            val intent = Intent(this, OfflineActivity::class.java)
+            startActivity(intent)
+        }
+
         // Check if the user has accepted the terms
         if (!SharedPreferencesHelper.hasAcceptedTerms(this)) {
             // Redirect to PrivacyPolicyAgreement
@@ -34,6 +40,26 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             finish() // Close MainActivity until terms are accepted
             return
+        }
+
+        // Check token validity
+        val token = SharedPreferencesHelper.getToken(this)
+        if (token != null) {
+            val jwt = JWT(token)
+            val expiresAt = jwt.expiresAt
+            val isTokenValid = expiresAt != null && expiresAt.after(Date())
+
+            if (isTokenValid) {
+                // If the token is valid, navigate to HomeActivity
+                val role = jwt.getClaim("role").asString()
+                val intent = Intent(this, Home::class.java)
+                intent.putExtra("role", role)
+                startActivity(intent)
+                return
+            } else {
+                // Clear the invalid token
+                SharedPreferencesHelper.clearToken(this)
+            }
         }
 
         setContentView(R.layout.activity_main)

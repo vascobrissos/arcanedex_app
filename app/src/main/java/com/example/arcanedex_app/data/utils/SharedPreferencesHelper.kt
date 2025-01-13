@@ -2,6 +2,8 @@ package com.example.arcanedex_app.data.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
 // Singleton object to manage shared preferences
 object SharedPreferencesHelper {
@@ -81,5 +83,12 @@ object SharedPreferencesHelper {
             .edit()
             .putBoolean(KEY_HAS_ACCEPTED_TERMS, accepted)
             .apply()
+    }
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }

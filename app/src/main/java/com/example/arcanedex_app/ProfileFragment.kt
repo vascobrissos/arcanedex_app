@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -16,6 +17,12 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val view = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        // Find the button and set its click listener
+        val logoutButton: Button = view.findViewById(R.id.logoutButton)
+        logoutButton.setOnClickListener {
+            logoutUser()
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
@@ -29,7 +36,7 @@ class ProfileFragment : Fragment() {
         return view
     }
 
-    fun logout(view: View?) {
+    private fun logoutUser() {
         // Clear saved preferences (example: hasAcceptedTerms or token)
         SharedPreferencesHelper.clearToken(requireContext())
 
