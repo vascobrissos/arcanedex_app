@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.fragment.NavHostFragment
 import com.auth0.android.jwt.JWT
 import com.example.arcanedex_app.data.models.LoginRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
@@ -36,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_main)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
