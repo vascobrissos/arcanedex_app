@@ -62,7 +62,7 @@ class HomeFragment : Fragment() {
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
                 // Trigger loading more data when the user scrolls to the bottom
-                if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount) {
+                if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount || cardItems.size < totalItemCount) {
                     loadMoreData()
                 }
             }
@@ -86,6 +86,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadMoreData() {
+
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
