@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
             // Redirecionar para com.example.arcanedex_app.OfflineActivity
             val intent = Intent(this, OfflineActivity::class.java)
             startActivity(intent)
+            return
         }
 
         // Check if the user has accepted the terms

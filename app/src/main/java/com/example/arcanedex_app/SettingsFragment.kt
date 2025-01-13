@@ -1,5 +1,6 @@
 package com.example.arcanedex_app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 
 class SettingsFragment : Fragment() {
 
@@ -31,7 +33,8 @@ class SettingsFragment : Fragment() {
         }
 
         privacyPolicy.setOnClickListener {
-            Toast.makeText(context, "Política de Privacidade selecionada", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Política de Privacidade selecionada", Toast.LENGTH_SHORT)
+                .show()
         }
 
         aboutUs.setOnClickListener {
@@ -40,9 +43,21 @@ class SettingsFragment : Fragment() {
 
         logoutButton.setOnClickListener {
             Toast.makeText(context, "Logout realizado", Toast.LENGTH_SHORT).show()
-
+            logoutUser(view)
         }
 
         return view
+    }
+
+    private fun logoutUser(view: View?) {
+        // Clear saved preferences (example: hasAcceptedTerms or token)
+        SharedPreferencesHelper.clearToken(requireContext())
+
+        // Navigate to MainActivity
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        startActivity(intent)
+
+        // Optional: Close the current Activity if this Fragment is part of an Activity
+        requireActivity().finish()
     }
 }
