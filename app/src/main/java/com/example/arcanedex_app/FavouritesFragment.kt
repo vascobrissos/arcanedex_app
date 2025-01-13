@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
+import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,10 @@ class FavouritesFragment : Fragment() {
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
-                findNavController().navigate(R.id.action_favouritesFragment_to_detailFragment, bundle)
+                findNavController().navigate(
+                    R.id.action_favouritesFragment_to_detailFragment,
+                    bundle
+                )
             },
             onFavoriteToggle = { favoriteItem ->
                 // Atualizar o estado local
@@ -61,7 +65,12 @@ class FavouritesFragment : Fragment() {
                     filteredItems.remove(favoriteItem)
                     adapter.notifyDataSetChanged()
                 }
-                // Você também pode atualizar o status no servidor se necessário
+
+                if (favoriteItem.isFavorite) {
+                    addCreatureToFavorites(favoriteItem.Id)
+                } else {
+                    removeCreatureFromFavorites(favoriteItem.Id)
+                }
             },
             showFavorites = true // Exibe apenas os favoritos
         )
@@ -78,7 +87,11 @@ class FavouritesFragment : Fragment() {
 
                 // Trigger loading more data when the user scrolls to the bottom
                 if (!isLoading && lastVisibleItemPosition + 1 >= totalItemCount && cardItems.size < totalRecords) {
-                    Toast.makeText(requireContext(), "cards" + cardItems.size + " totalrecords: " + totalRecords, Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        requireContext(),
+                        "cards" + cardItems.size + " totalrecords: " + totalRecords,
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                     loadMoreData()
                 }
@@ -126,14 +139,14 @@ class FavouritesFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     val newCardItems = response.data
-                        .filter { it.isFavorite } // Apenas os favoritos
+                        .filter { it.isFavoriteToUser } // Apenas os favoritos
                         .map { creature ->
                             CardItem(
                                 Id = creature.Id,
                                 Name = creature.Name,
                                 Img = creature.Img,
                                 Lore = creature.Lore,
-                                isFavorite = creature.isFavorite
+                                isFavorite = creature.isFavoriteToUser
                             )
                         }
 
@@ -171,5 +184,82 @@ class FavouritesFragment : Fragment() {
         }
 
         adapter.notifyDataSetChanged()
+    }
+
+    private fun addCreatureToFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.addCreatureToFavorites(
+                    token = "Bearer $token",
+                    favoriteRequest = FavoriteRequest(CreatureId = creatureId)
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT)
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to add to favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun removeCreatureFromFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.removeCreatureFromFavorites(
+                    token = "Bearer $token",
+                    creatureId = creatureId
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Removed from favorites",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to remove from favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
 }

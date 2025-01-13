@@ -5,5 +5,5 @@ data class Creature(
     val Name: String,
     val Img: String?,
     val Lore: String,
-    var isFavorite: Boolean
+    var isFavoriteToUser: Boolean
 )

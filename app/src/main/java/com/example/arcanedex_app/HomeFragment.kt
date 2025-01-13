@@ -15,6 +15,7 @@ import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
 import com.example.arcanedex_app.data.database.AppDatabase
 import com.example.arcanedex_app.data.models.ArcaneEntity
+import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,9 +58,17 @@ class HomeFragment : Fragment() {
             onFavoriteToggle = { favoriteItem ->
                 favoriteItem.isFavorite = !favoriteItem.isFavorite
                 adapter.notifyDataSetChanged()
+
+                if (favoriteItem.isFavorite) {
+                    addCreatureToFavorites(favoriteItem.Id)
+                    filteredItems.remove(favoriteItem)
+                } else {
+                    removeCreatureFromFavorites(favoriteItem.Id)
+                }
             },
-            showFavorites = false
+            showFavorites = true
         )
+
 
         recyclerView.adapter = adapter
 
@@ -127,7 +136,7 @@ class HomeFragment : Fragment() {
                             Name = creature.Name,
                             Img = creature.Img,
                             Lore = creature.Lore,
-                            isFavorite = creature.isFavorite
+                            isFavorite = creature.isFavoriteToUser
                         )
                     }
 
@@ -208,4 +217,82 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+    private fun addCreatureToFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.addCreatureToFavorites(
+                    token = "Bearer $token",
+                    favoriteRequest = FavoriteRequest(CreatureId = creatureId)
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT)
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to add to favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun removeCreatureFromFavorites(creatureId: Int) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token == null) {
+            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.removeCreatureFromFavorites(
+                    token = "Bearer $token",
+                    creatureId = creatureId
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Removed from favorites",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to remove from favorites: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
 }
