@@ -21,25 +21,23 @@ class DetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-0
-        // Receber os dados do CardItem
+
         val cardItem = arguments?.getParcelable<CardItem>("cardItem")
 
-        // Referências para os elementos da UI
         val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
         val descriptionTextView = view.findViewById<TextView>(R.id.descriptionTextView)
         val imageView = view.findViewById<ImageView>(R.id.imageView)
 
-        // Atualizar a UI com os dados do card
-        titleTextView.text = cardItem?.name
-        descriptionTextView.text = "Descrição do card: ${cardItem?.name}"
+        titleTextView.text = cardItem?.Name
+        descriptionTextView.text = "Descrição do card: ${cardItem?.Lore}"
 
-        cardItem?.imageUrl?.let { imageUrl ->
+        cardItem?.Img?.let { img ->
             Glide.with(requireContext())
-                .load(imageUrl)
+                .load(img) // Load the base64 image into the ImageView
                 .into(imageView)
         } ?: run {
-            imageView.setBackgroundResource(R.color.primary) // Fundo padrão
+            imageView.setBackgroundResource(R.color.primary) // Default background
         }
     }
+
 }

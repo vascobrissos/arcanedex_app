@@ -1,10 +1,14 @@
 package com.example.arcanedex_app
 
+import android.graphics.BitmapFactory
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -26,27 +30,29 @@ class CardAdapter(
     }
 
     override fun onBindViewHolder(holder: CardViewHolder, position: Int) {
-        val item = items[position]
+        val cardItem = items[position]
 
-        // Configurar o nome
-        holder.titleTextView.text = item.name
+        holder.titleTextView.text = cardItem.Name
 
-        // Configurar a imagem
-        if (!item.imageUrl.isNullOrEmpty()) {
-            Glide.with(holder.itemView.context)
-                .load(item.imageUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .placeholder(R.color.primary) // Cor padrão enquanto carrega
-                .into(holder.imageView)
-        } else {
-            holder.imageView.setBackgroundResource(R.color.primary) // Fundo padrão
+        cardItem.Img?.let {
+            try {
+                Glide.with(holder.itemView.context)
+                    .load(cardItem.Img)
+                    .into(holder.imageView)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                holder.imageView.setImageResource(R.drawable.error_image) // Fallback
+            }
+        } ?: run {
+            holder.imageView.setImageResource(R.drawable.error_image) // Fallback
         }
 
-        // Configurar clique no card
         holder.itemView.setOnClickListener {
-            onItemClick(item)
+            onItemClick(cardItem)
         }
     }
+
 
     override fun getItemCount(): Int = items.size
 }
