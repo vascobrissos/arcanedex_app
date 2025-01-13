@@ -102,7 +102,6 @@ class HomeFragment : Fragment() {
         isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
-
                 // Get the token from SharedPreferences
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
@@ -113,9 +112,11 @@ class HomeFragment : Fragment() {
                     isLoading = false
                     return@launch
                 }
-                // Buscar dados da API
+
+                // Fetch data from API with the token
                 val response = RetrofitClient.instance.getAllCreatures(
-                    token = "Bearer $token",
+                    token = "Bearer $token", // Add token to the request
+
                     page = currentPage,
                     limit = 6 // Exemplo de paginação
                 )
@@ -157,6 +158,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
 
     private fun filterCards(query: String?) {
         val searchText = query?.trim()?.lowercase() ?: ""

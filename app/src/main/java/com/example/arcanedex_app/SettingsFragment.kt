@@ -1,6 +1,7 @@
 package com.example.arcanedex_app
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -32,13 +33,20 @@ class SettingsFragment : Fragment() {
             findNavController().navigate(R.id.action_settingsFragment_to_profileFragment)
         }
 
+        // Listener para o botão de Política de Privacidade
         privacyPolicy.setOnClickListener {
-            Toast.makeText(context, "Política de Privacidade selecionada", Toast.LENGTH_SHORT)
-                .show()
+            // Abre o link no navegador
+            val privacyPolicyUrl = "http://legismente.ddns.net/index.html"
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl))
+            context?.startActivity(browserIntent)
         }
 
+        // Listener para o botão Sobre Nós
         aboutUs.setOnClickListener {
-            Toast.makeText(context, "Sobre Nós selecionado", Toast.LENGTH_SHORT).show()
+            // Abre o link no navegador
+            val aboutUsUrl = "http://legismente.ddns.net/sobre-nos.html"
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(aboutUsUrl))
+            context?.startActivity(browserIntent)
         }
 
         logoutButton.setOnClickListener {
