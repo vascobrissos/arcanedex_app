@@ -6,6 +6,7 @@ import com.example.arcanedex_app.data.models.LoginResponse
 import com.example.arcanedex_app.data.models.RegisterRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -18,7 +19,9 @@ interface ApiService {
 
     @GET("creatures")
     suspend fun getAllCreatures(
+        @Header("Authorization") token: String,
         @Query("page") page: Int,
         @Query("limit") limit: Int
     ): CreatureResponse
+
 }

@@ -3,6 +3,7 @@ package com.example.arcanedex_app
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,6 +22,7 @@ class OfflineActivity : AppCompatActivity() {
     private lateinit var adapter: CardAdapter
     private val cardItems = mutableListOf<CardItem>()
     private var timer: Timer? = null
+    private var isNavigatingToMain = false // Evitar múltiplas transições para MainActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,31 +31,37 @@ class OfflineActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerview)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
 
-        adapter = CardAdapter(cardItems) { clickedItem ->
-            // Handle item click
-        }
+        // Inicializar o adapter
+        adapter = CardAdapter(
+            items = cardItems,
+            onItemClick = { clickedItem ->
+                // Aqui você pode implementar navegação para os detalhes do item, se necessário
+                Log.d("OfflineActivity", "Clicked on: ${clickedItem.Name}")
+            },
+            onFavoriteToggle = {
+                // No modo offline, não alteramos favoritos
+                Toast.makeText(this, "Favorites can't be toggled offline", Toast.LENGTH_SHORT).show()
+            },
+            showFavorites = false // Sem lógica de favoritos no modo offline
+        )
         recyclerView.adapter = adapter
 
-        // Load cached data
+        // Carregar dados em cache
         loadCachedArcanes()
 
-        // Start periodic internet check
+        // Iniciar checagem de internet periódica
         startInternetCheck()
     }
 
     private fun loadCachedArcanes() {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(applicationContext)
-            val cachedArcanes = db.arcaneDao().getAllArcanes()
+            val cachedArcanes = db.arcaneDao().getAllArcanes() // Método para buscar todos os dados
 
             if (cachedArcanes.isEmpty()) {
-                // Log a message if the database is empty
                 Log.d("OfflineActivity", "No data found in the database.")
             } else {
-                // Log the fetched data
-                for (arcane in cachedArcanes) {
-                    Log.d("OfflineActivity", "Fetched Arcane: $arcane")
-                }
+                Log.d("OfflineActivity", "Loaded ${cachedArcanes.size} items from cache.")
             }
 
             withContext(Dispatchers.Main) {
@@ -63,7 +71,8 @@ class OfflineActivity : AppCompatActivity() {
                         Id = arcane.id,
                         Name = arcane.name,
                         Img = arcane.img,
-                        Lore = arcane.lore
+                        Lore = arcane.lore,
+                        isFavorite = false // No offline mode, we ignore the favorite status
                     )
                 })
                 adapter.notifyDataSetChanged()
@@ -71,22 +80,22 @@ class OfflineActivity : AppCompatActivity() {
         }
     }
 
-
     private fun startInternetCheck() {
         timer = Timer()
         timer?.schedule(timerTask {
-            if (SharedPreferencesHelper.isInternetAvailable(this@OfflineActivity)) {
+            if (!isNavigatingToMain && SharedPreferencesHelper.isInternetAvailable(this@OfflineActivity)) {
                 runOnUiThread {
+                    isNavigatingToMain = true // Evita múltiplas navegações
                     val intent = Intent(this@OfflineActivity, MainActivity::class.java)
                     startActivity(intent)
                     finish()
                 }
             }
-        }, 0, 5000) // Check every 5 seconds
+        }, 0, 5000) // Verifica a cada 5 segundos
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        timer?.cancel() // Stop the timer when the activity is destroyed
+        timer?.cancel() // Cancelar o timer ao destruir a activity
     }
 }
