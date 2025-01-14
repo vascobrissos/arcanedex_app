@@ -1,12 +1,19 @@
 package com.example.arcanedex_app.fragments
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
@@ -24,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 class AdminFragment : Fragment() {
 
@@ -37,6 +45,12 @@ class AdminFragment : Fragment() {
     private var currentPage = 1 // Current page for pagination
     private val pageSize = 6 // Number of items to fetch per page
     private var totalCreaturesCount = 0 // Total number of creatures in the backend
+
+    private val FILE_PICKER_REQUEST_CODE = 102
+    private var selectedImageUri: Uri? = null
+    private var encodedImage: String? = null
+    private var mimeType: String? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -219,12 +233,22 @@ class AdminFragment : Fragment() {
             if (arcaneList.size < totalCreaturesCount) View.VISIBLE else View.GONE
     }
 
+    private var imagePreview: ImageView? = null
+
     private fun showEditDialog(arcane: Arcane?, onSave: (String, String) -> Unit) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_arcane, null)
         val arcaneNameEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneName)
         val arcaneDescriptionEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneDescription)
         val saveButton = dialogView.findViewById<Button>(R.id.buttonSave)
         val cancelButton = dialogView.findViewById<Button>(R.id.buttonCancel)
+
+        val selectImageButton = dialogView.findViewById<Button>(R.id.buttonSelectImage)
+        imagePreview = dialogView.findViewById<ImageView>(R.id.imagePreview) // Optional preview
+
+        selectImageButton.setOnClickListener {
+            openFileExplorer()
+        }
+
 
         // Pre-fill fields for edit
         arcane?.let {
@@ -251,8 +275,14 @@ class AdminFragment : Fragment() {
                     cancelButton.isEnabled = false
 
                     CoroutineScope(Dispatchers.IO).launch {
-                        val request =
-                            CreatureRequestAdmin(Name = newName, Lore = newDescription, Img = null)
+                        val request = CreatureRequestAdmin(
+                            Name = newName,
+                            Lore = newDescription,
+                            Img = if (encodedImage != null && mimeType != null) {
+                                "data:$mimeType;base64,$encodedImage"
+                            } else null
+                        )
+
                         val response = if (arcane == null) {
                             RetrofitClient.instance.addCreature(request, "Bearer $token")
                         } else {
@@ -310,4 +340,32 @@ class AdminFragment : Fragment() {
 
         dialog.show()
     }
+
+    private fun openFileExplorer() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "image/*"
+        }
+        startActivityForResult(intent, FILE_PICKER_REQUEST_CODE)
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            selectedImageUri = data?.data
+            selectedImageUri?.let { uri ->
+                val bitmap =
+                    MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
+                val byteArray = outputStream.toByteArray()
+                encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                mimeType = "image/jpeg"
+
+                // Optional: Update image preview
+                imagePreview?.setImageBitmap(bitmap)
+            }
+        }
+    }
+
 }
