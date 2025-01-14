@@ -49,4 +49,9 @@
         android:id="@+id/action_profileFragment_to_settingsFragment"
         app:destination="@id/settingsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.example.arcanedex_app.fragments.AdminFragment"
+        android:label="AdminFragment" />
 </navigation>

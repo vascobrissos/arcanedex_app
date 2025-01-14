@@ -28,5 +28,7 @@
         app:menu="@menu/bottom_nav_menu"
         app:itemActiveIndicatorStyle="@style/NoActiveIndicatorStyle"
         app:itemTextColor="@color/itemscolormenu"
-        app:itemIconTint="@color/itemscolormenu"/>
+        app:itemIconTint="@color/itemscolormenu"
+        app:labelVisibilityMode="selected"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>
