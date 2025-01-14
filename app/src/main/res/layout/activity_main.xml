@@ -105,19 +105,16 @@
         <TextView
             android:id="@+id/registerLink"
             android:layout_width="457dp"
-            android:layout_height="22dp"
+            android:layout_height="45dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp"
             android:clickable="true"
             android:focusable="true"
             android:text="@string/noAccount"
             android:textAlignment="center"
             android:textColor="@color/link"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button"
-            app:layout_constraintVertical_bias="0.017" />
+            app:layout_constraintTop_toBottomOf="@+id/button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
