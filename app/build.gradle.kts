@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.arcanedex_app"
+    namespace = "pt.ipt.arcanedex_app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.arcanedex_app"
+        applicationId = "pt.ipt.arcanedex_app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

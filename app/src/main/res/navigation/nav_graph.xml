@@ -4,7 +4,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.arcanedex_app.fragments.HomeFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.HomeFragment"
         android:label="HomeFragment">
         <action
             android:id="@+id/action_homeFragment_to_detailFragment"
@@ -17,12 +17,12 @@
 
     <fragment
         android:id="@+id/detailFragment"
-        android:name="com.example.arcanedex_app.fragments.DetailFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.DetailFragment"
         android:label="DetailFragment" />
 
     <fragment
         android:id="@+id/favouritesFragment"
-        android:name="com.example.arcanedex_app.fragments.FavouritesFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.FavouritesFragment"
         android:label="FavouritesFragment">
         <!-- Limpar a pilha de navegação e voltar para favoritos -->
         <action
@@ -46,7 +46,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.arcanedex_app.fragments.SettingsFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.SettingsFragment"
         android:label="Settings">
         <action
             android:id="@+id/action_settingsFragment_to_profileFragment"
@@ -59,7 +59,7 @@
 
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.example.arcanedex_app.fragments.ProfileFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.ProfileFragment"
         android:label="ProfileFragment">
         <action
             android:id="@+id/action_profileFragment_to_settingsFragment"
@@ -72,6 +72,6 @@
 
     <fragment
         android:id="@+id/adminFragment"
-        android:name="com.example.arcanedex_app.fragments.AdminFragment"
+        android:name="pt.ipt.arcanedex_app.fragments.AdminFragment"
         android:label="AdminFragment" />
 </navigation>
