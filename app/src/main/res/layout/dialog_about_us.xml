@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <!-- Título -->
+    <TextView
+        android:id="@+id/aboutUsTitleTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Sobre Nós"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/telmoImage" />
+
+    <!-- Imagem e informações do Telmo -->
+    <ImageView
+        android:id="@+id/telmoImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/telmophoto"
+        android:scaleType="centerCrop"
+        android:background="@drawable/circle_background"
+        android:clipToOutline="true"
+        app:layout_constraintTop_toBottomOf="@id/aboutUsTitleTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/telmoInfoTextView"
+        android:layout_marginEnd="16dp" />
+
+    <TextView
+        android:id="@+id/telmoInfoTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Telmo Gonçalves\nnº 22914"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="@id/telmoImage"
+        app:layout_constraintStart_toEndOf="@id/telmoImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/telmoImage" />
+
+    <!-- Imagem e informações do Vasco -->
+    <ImageView
+        android:id="@+id/vascoImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/vascophoto"
+        android:scaleType="centerCrop"
+        android:background="@drawable/circle_background"
+        android:clipToOutline="true"
+        app:layout_constraintTop_toBottomOf="@id/telmoImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/vascoInfoTextView"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/vascoInfoTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Vasco Brissos Alves\nnº 23193"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="@id/vascoImage"
+        app:layout_constraintStart_toEndOf="@id/vascoImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/vascoImage" />
+
+    <!-- Curso e disciplina -->
+    <TextView
+        android:id="@+id/courseInfoTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Disciplina: Desenvolvimento de Aplicações Móveis\nCurso: Licenciatura em Engenharia Informática"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/vascoImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <!-- Bibliotecas e frameworks -->
+    <TextView
+        android:id="@+id/librariesTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Bibliotecas e Frameworks usados:\n• Retrofit\n• Glide\n• Auth0 JWT\n• ConstraintLayout\n• Material Design Components\n• AndroidX Libraries"
+        android:textSize="14sp"
+        android:textColor="@color/black"
+        android:lineSpacingExtra="4dp"
+        app:layout_constraintTop_toBottomOf="@id/courseInfoTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <!-- Botão de fechar -->
+    <Button
+        android:id="@+id/aboutUsCloseButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Fechar"
+        android:backgroundTint="@color/primary"
+        android:textColor="@android:color/white"
+        app:layout_constraintTop_toBottomOf="@id/librariesTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -356,7 +356,6 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     isOfflineDataFetched = true // Marca como feito para a sessão atual
                     loadingSpinner.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Offline data saved successfully!", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

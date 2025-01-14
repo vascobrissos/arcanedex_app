@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.arcanedex_app.R
@@ -23,32 +24,24 @@ class SettingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        // Configurar os cliques nas seções
         val privacyPolicy = view.findViewById<TextView>(R.id.privacyPolicy)
         val aboutUs = view.findViewById<TextView>(R.id.aboutUs)
         val logoutButton = view.findViewById<Button>(R.id.logoutButton)
 
-        // Configurando o listener para o ícone do lápis
         val editIcon = view.findViewById<View>(R.id.editIcon)
         editIcon.setOnClickListener {
-            // Navegar de volta para o ProfileFragment
             findNavController().navigate(R.id.action_settingsFragment_to_profileFragment)
         }
 
-        // Listener para o botão de Política de Privacidade
         privacyPolicy.setOnClickListener {
-            // Abre o link no navegador
+            // Open privacy policy link
             val privacyPolicyUrl = "http://legismente.ddns.net/index.html"
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl))
             context?.startActivity(browserIntent)
         }
 
-        // Listener para o botão Sobre Nós
         aboutUs.setOnClickListener {
-            // Abre o link no navegador
-            val aboutUsUrl = "http://legismente.ddns.net/sobre-nos.html"
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(aboutUsUrl))
-            context?.startActivity(browserIntent)
+            showAboutUsDialog() // Show About Us popup
         }
 
         logoutButton.setOnClickListener {
@@ -60,14 +53,26 @@ class SettingsFragment : Fragment() {
     }
 
     private fun logoutUser() {
-        // Clear saved preferences (example: hasAcceptedTerms or token)
         SharedPreferencesHelper.clearToken(requireContext())
-
-        // Navigate to MainActivity
         val intent = Intent(requireContext(), MainActivity::class.java)
         startActivity(intent)
-
-        // Optional: Close the current Activity if this Fragment is part of an Activity
         requireActivity().finish()
+    }
+
+    private fun showAboutUsDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_about_us, null)
+
+        val builder = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+
+        val dialog = builder.create()
+
+        val closeButton = dialogView.findViewById<Button>(R.id.aboutUsCloseButton)
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 }

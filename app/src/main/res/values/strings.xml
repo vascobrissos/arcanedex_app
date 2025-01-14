@@ -29,4 +29,7 @@
     </string>
     <string name="carregar_mais">CARREGAR MAIS</string>
     <string name="descri_o_existente_do_arcane">Descrição existente do arcane</string>
+    <string name="editar_dados">Editar Dados</string>
+    <string name="privacy_policy">Política de privacidade</string>
+    <string name="about_us">Sobre nós</string>
 </resources>
