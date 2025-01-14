@@ -10,7 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 data class Arcane(
     val id: Int, // Unique identifier for each arcane
     val name: String,
-    val description: String?
+    val description: String?,
+    val image: String?
 )
 
 class ArcaneAdapter(

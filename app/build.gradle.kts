@@ -67,6 +67,7 @@ dependencies {
     // JWTDecode
     implementation("com.auth0.android:jwtdecode:2.0.1")
     implementation(libs.androidx.room.common)
+    implementation(libs.androidx.media3.common.ktx)
 
     // Testing
     testImplementation(libs.junit)

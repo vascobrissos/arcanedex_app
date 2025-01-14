@@ -8,18 +8,15 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.SearchView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.arcanedex_app.Arcane
 import com.example.arcanedex_app.ArcaneAdapter
 import com.example.arcanedex_app.R
@@ -35,65 +32,49 @@ import java.io.ByteArrayOutputStream
 
 class AdminFragment : Fragment() {
 
+    // === Variáveis Globais ===
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ArcaneAdapter
     private lateinit var searchView: SearchView
     private lateinit var totalCountTextView: TextView
     private lateinit var loadMoreButton: Button
-    private val arcaneList = mutableListOf<Arcane>() // List of Arcane objects
-    private val filteredList = mutableListOf<Arcane>()
-    private var currentPage = 1 // Current page for pagination
-    private val pageSize = 6 // Number of items to fetch per page
-    private var totalCreaturesCount = 0 // Total number of creatures in the backend
+    private val arcaneList = mutableListOf<Arcane>()
+    private var currentPage = 1
+    private val pageSize = 6
+    private var totalCreaturesCount = 0
 
     private val FILE_PICKER_REQUEST_CODE = 102
     private var selectedImageUri: Uri? = null
     private var encodedImage: String? = null
     private var mimeType: String? = null
+    private var imagePreview: ImageView? = null
 
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    // === Ciclo de Vida ===
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_admin, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupUI(view)
         fetchCreatures()
+    }
 
+    // === Configurações de UI ===
+    private fun setupUI(view: View) {
         recyclerView = view.findViewById(R.id.arcanesRecyclerView)
         searchView = view.findViewById(R.id.searchView)
         totalCountTextView = view.findViewById(R.id.totalCountTextView)
-        loadMoreButton = view.findViewById(R.id.loadMoreButton) // Button to load more
+        loadMoreButton = view.findViewById(R.id.loadMoreButton)
         val addButton = view.findViewById<FloatingActionButton>(R.id.addFloatingButton)
 
-        // Configure RecyclerView
         adapter = ArcaneAdapter(
-            arcanes = filteredList,
+            arcanes = arcaneList,
             onEditClick = { arcane, position ->
-                showEditDialog(arcane) { newName, newDescription ->
-                    // Update local list and notify adapter
-                    val originalPosition = arcaneList.indexOfFirst { it.id == arcane.id }
-                    if (originalPosition >= 0) {
-                        arcaneList[originalPosition] = arcane.copy(
-                            name = newName,
-                            description = newDescription
-                        )
-                        filteredList[position] = arcane.copy(
-                            name = newName,
-                            description = newDescription
-                        )
-                        adapter.notifyItemChanged(position)
-                        updateTotalCount()
-                        Toast.makeText(
-                            requireContext(),
-                            "Arcane updated: $newName",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                showEditDialog(arcane) { newName, newDescription, newImage ->
+                    updateArcane(arcane.id, newName, newDescription, newImage)
+                    updateArcaneLocally(arcane.id, newName, newDescription, position)
                 }
             }
         )
@@ -101,130 +82,96 @@ class AdminFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Configure SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                filterList(query)
+                fetchCreatures(searchQuery = query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                filterList(newText)
+                fetchCreatures(searchQuery = newText)
                 return true
             }
         })
 
         addButton.setOnClickListener {
-            showEditDialog(null) { name, description ->
-                val token = SharedPreferencesHelper.getToken(requireContext())
-                if (token != null) {
-                    addButton.isEnabled = false
-
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val request =
-                            CreatureRequestAdmin(Name = name, Lore = description, Img = null)
-                        val response = RetrofitClient.instance.addCreature(request, "Bearer $token")
-
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                val newArcane = Arcane(
-                                    id = id,
-                                    name = name,
-                                    description = description
-                                )
-                                arcaneList.add(newArcane)
-                                filteredList.add(newArcane)
-                                adapter.notifyItemInserted(filteredList.size - 1)
-                                updateTotalCount()
-
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Arcane added: $name",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Failed to add arcane: ${response.errorBody()?.string()}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            addButton.isEnabled = true
-                        }
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
-                }
+            showEditDialog(null) { name, description, image ->
+                addArcane(name, description, image)
             }
         }
 
         loadMoreButton.setOnClickListener {
             fetchCreatures(loadMore = true)
         }
-
-        updateTotalCount()
     }
 
-    private fun filterList(query: String?) {
-        val searchQuery = query?.lowercase() ?: ""
-        filteredList.clear()
-        if (searchQuery.isEmpty()) {
-            filteredList.addAll(arcaneList)
-        } else {
-            filteredList.addAll(arcaneList.filter {
-                it.name.lowercase().contains(searchQuery)
-            })
-        }
-        adapter.notifyDataSetChanged()
-    }
-
+    // === Atualizações Locais ===
     private fun updateTotalCount() {
-        totalCountTextView.text = "Total: ${arcaneList.size} creatures"
+        totalCountTextView.text = "Total: $totalCreaturesCount criaturas"
     }
 
-    private fun fetchCreatures(loadMore: Boolean = false) {
+    private fun updateArcaneLocally(id: Int, newName: String, newDescription: String, position: Int) {
+        val index = arcaneList.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            arcaneList[index] = arcaneList[index].copy(
+                name = newName,
+                description = newDescription
+            )
+            adapter.notifyItemChanged(position)
+            updateTotalCount()
+        }
+    }
+
+    // === Manipulação de Criaturas ===
+    private fun fetchCreatures(loadMore: Boolean = false, searchQuery: String? = null) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val response = RetrofitClient.instance.getAllCreatures(
+                    val response = RetrofitClient.instance.getAdminAllCreatures(
                         token = "Bearer $token",
-                        page = currentPage,
+                        page = if (loadMore) currentPage else 1,
                         limit = pageSize,
-                        name = "",
-                        onlyFavoriteArcanes = false,
-                        toSaveOffline = true
+                        name = searchQuery ?: ""
                     )
                     withContext(Dispatchers.Main) {
-                        if (loadMore) {
-                            arcaneList.addAll(response.data.map { Arcane(it.Id, it.Name, it.Lore) })
+                        if (response.isSuccessful) {
+                            val responseData = response.body()
+                            val creatures = responseData?.data?.map { creature ->
+                                Arcane(
+                                    id = creature.Id,
+                                    name = creature.Name,
+                                    description = creature.Lore,
+                                    image = creature.Img
+                                )
+                            } ?: emptyList()
+
+                            if (loadMore) {
+                                arcaneList.addAll(creatures)
+                            } else {
+                                arcaneList.clear()
+                                arcaneList.addAll(creatures)
+                            }
+
+                            adapter.notifyDataSetChanged()
+                            totalCreaturesCount = responseData?.totalCount ?: 0
+                            if (!loadMore) currentPage = 1
+                            currentPage++
+
+                            updateTotalCount()
+                            toggleLoadMoreButton()
                         } else {
-                            arcaneList.clear()
-                            arcaneList.addAll(response.data.map { Arcane(it.Id, it.Name, it.Lore) })
+                            Toast.makeText(requireContext(), "Erro ao encontrar criaturas", Toast.LENGTH_SHORT).show()
                         }
-
-                        filteredList.clear()
-                        filteredList.addAll(arcaneList)
-
-                        adapter.notifyDataSetChanged()
-                        totalCreaturesCount = response.count
-                        currentPage++
-
-                        updateTotalCount()
-                        toggleLoadMoreButton()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to fetch creatures",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), "Falha na requisição: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         } else {
-            Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Token não encontrado", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -233,28 +180,80 @@ class AdminFragment : Fragment() {
             if (arcaneList.size < totalCreaturesCount) View.VISIBLE else View.GONE
     }
 
-    private var imagePreview: ImageView? = null
+    private fun addArcane(name: String, description: String, image: String?) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val request = CreatureRequestAdmin(Name = name, Lore = description, Img = image)
+                val response = RetrofitClient.instance.addCreature(request, "Bearer $token")
 
-    private fun showEditDialog(arcane: Arcane?, onSave: (String, String) -> Unit) {
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val newArcane = Arcane(
+                            id = response.body()?.Id ?: 0,
+                            name = name,
+                            description = description,
+                            image = image
+                        )
+                        arcaneList.add(newArcane)
+                        adapter.notifyItemInserted(arcaneList.size - 1)
+                        updateTotalCount()
+
+                        Toast.makeText(requireContext(), "Arcane adicionado: $name", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Erro ao adicionar arcane: ${response.errorBody()?.string()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(requireContext(), "Token não encontrado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateArcane(arcaneId: Int, name: String, description: String, image: String?) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val request = CreatureRequestAdmin(Name = name, Lore = description, Img = image.toString())
+                val response = RetrofitClient.instance.editCreature(arcaneId, request, "Bearer $token")
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(requireContext(), "Arcane atualizado com sucesso!", Toast.LENGTH_SHORT).show()
+                        fetchCreatures()
+                    } else {
+                    }
+                }
+            }
+        }
+    }
+
+    // === Manipulação de Diálogos ===
+    private fun showEditDialog(arcane: Arcane?, onSave: (String, String, String?) -> Unit) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_arcane, null)
         val arcaneNameEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneName)
         val arcaneDescriptionEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneDescription)
         val saveButton = dialogView.findViewById<Button>(R.id.buttonSave)
         val cancelButton = dialogView.findViewById<Button>(R.id.buttonCancel)
-
         val selectImageButton = dialogView.findViewById<Button>(R.id.buttonSelectImage)
-        imagePreview = dialogView.findViewById<ImageView>(R.id.imagePreview) // Optional preview
+        imagePreview = dialogView.findViewById(R.id.imagePreview)
 
-        selectImageButton.setOnClickListener {
-            openFileExplorer()
-        }
+        var updatedEncodedImage: String? = null
 
-
-        // Pre-fill fields for edit
         arcane?.let {
             arcaneNameEditText.setText(it.name)
             arcaneDescriptionEditText.setText(it.description)
+
+            if (!it.image.isNullOrEmpty()) {
+                Glide.with(requireContext())
+                    .load(it.image)
+                    .placeholder(R.drawable.error_image)
+                    .error(R.drawable.error_image)
+                    .into(imagePreview!!)
+            }
         }
+
+        selectImageButton.setOnClickListener { openFileExplorer() }
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -267,105 +266,53 @@ class AdminFragment : Fragment() {
             val newDescription = arcaneDescriptionEditText.text.toString().trim()
 
             if (newName.isEmpty()) {
-                Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Nome não pode estar vazio", Toast.LENGTH_SHORT).show()
             } else {
-                val token = SharedPreferencesHelper.getToken(requireContext())
-                if (token != null) {
-                    saveButton.isEnabled = false
-                    cancelButton.isEnabled = false
-
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val request = CreatureRequestAdmin(
-                            Name = newName,
-                            Lore = newDescription,
-                            Img = if (encodedImage != null && mimeType != null) {
-                                "data:$mimeType;base64,$encodedImage"
-                            } else null
-                        )
-
-                        val response = if (arcane == null) {
-                            RetrofitClient.instance.addCreature(request, "Bearer $token")
-                        } else {
-                            RetrofitClient.instance.editCreature(
-                                arcane.id,
-                                request,
-                                "Bearer $token"
-                            )
-                        }
-
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                if (arcane == null) {
-                                    val newArcane = Arcane(
-                                        id = id,
-                                        name = newName,
-                                        description = newDescription
-                                    )
-                                    arcaneList.add(newArcane)
-                                    filteredList.add(newArcane)
-                                    adapter.notifyItemInserted(filteredList.size - 1)
-                                } else {
-                                    val index = arcaneList.indexOfFirst { it.id == arcane.id }
-                                    if (index >= 0) {
-                                        arcaneList[index] = arcane.copy(
-                                            name = newName,
-                                            description = newDescription
-                                        )
-                                        filteredList[index] = arcane.copy(
-                                            name = newName,
-                                            description = newDescription
-                                        )
-                                        adapter.notifyItemChanged(index)
-                                    }
-                                }
-
-                                updateTotalCount()
-                                dialog.dismiss()
-                            } else {
-                                saveButton.isEnabled = true
-                                cancelButton.isEnabled = true
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Failed: ${response.errorBody()?.string()}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
-                }
+                onSave(newName, newDescription, encodedImage ?: arcane?.image)
+                dialog.dismiss()
             }
         }
 
         dialog.show()
     }
 
+    // === Manipulação de Imagens ===
     private fun openFileExplorer() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "image/*"
-        }
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
         startActivityForResult(intent, FILE_PICKER_REQUEST_CODE)
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             selectedImageUri = data?.data
             selectedImageUri?.let { uri ->
-                val bitmap =
-                    MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-                val outputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
-                val byteArray = outputStream.toByteArray()
-                encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP)
-                mimeType = "image/jpeg"
+                try {
+                    val contentResolver = requireContext().contentResolver
+                    mimeType = contentResolver.getType(uri)
 
-                // Optional: Update image preview
-                imagePreview?.setImageBitmap(bitmap)
+                    val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                    val outputStream = ByteArrayOutputStream()
+                    val format = when (mimeType) {
+                        "image/png" -> Bitmap.CompressFormat.PNG
+                        "image/webp" -> if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            Bitmap.CompressFormat.WEBP_LOSSY
+                        } else {
+                            Bitmap.CompressFormat.WEBP
+                        }
+                        else -> Bitmap.CompressFormat.JPEG
+                    }
+
+                    bitmap.compress(format, 100, outputStream)
+                    val byteArray = outputStream.toByteArray()
+                    encodedImage = "data:$mimeType;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+                    imagePreview?.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(requireContext(), "Erro ao processar a imagem", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
-
 }

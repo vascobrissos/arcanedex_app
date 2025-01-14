@@ -38,6 +38,14 @@ interface ApiService {
         @Query("ToSaveOffline") toSaveOffline: Boolean,
     ): CreatureResponse
 
+    @GET("admin/creatures")
+    suspend fun getAdminAllCreatures(
+        @Header("Authorization") token: String,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int,
+        @Query("name") name: String
+    ): Response<CreatureResponse>
+
     @GET("users/profile")
     suspend fun getUserProfile(
         @Header("Authorization") token: String
