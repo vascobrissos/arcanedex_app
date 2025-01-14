@@ -55,4 +55,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="@color/white"
         app:backgroundTint="@color/primary" />
+
+    <Button
+        android:id="@+id/loadMoreButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Load More"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

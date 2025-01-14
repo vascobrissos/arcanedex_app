@@ -7,16 +7,20 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+data class Arcane(
+    val id: Int, // Unique identifier for each arcane
+    val name: String,
+    val description: String?
+)
+
 class ArcaneAdapter(
-    private val arcanes: MutableList<String>,
-    private val onEditClick: (String, Int) -> Unit, // Callback para edição
-    private val onDeleteClick: (String) -> Unit
+    private val arcanes: MutableList<Arcane>, // Use the updated Arcane data class
+    private val onEditClick: (Arcane, Int) -> Unit // Callback with the full Arcane object
 ) : RecyclerView.Adapter<ArcaneAdapter.ArcaneViewHolder>() {
 
     inner class ArcaneViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val arcaneName: TextView = itemView.findViewById(R.id.arcaneName)
         val editButton: ImageButton = itemView.findViewById(R.id.editButton)
-        val deleteButton: ImageButton = itemView.findViewById(R.id.deleteButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ArcaneViewHolder {
@@ -26,13 +30,10 @@ class ArcaneAdapter(
 
     override fun onBindViewHolder(holder: ArcaneViewHolder, position: Int) {
         val arcane = arcanes[position]
-        holder.arcaneName.text = arcane
+        holder.arcaneName.text = arcane.name
 
-        // Aciona o callback quando o botão de editar é clicado
+        // Trigger the callback with the Arcane object and position when edit is clicked
         holder.editButton.setOnClickListener { onEditClick(arcane, position) }
-
-        // Aciona o callback para excluir
-        holder.deleteButton.setOnClickListener { onDeleteClick(arcane) }
     }
 
     override fun getItemCount(): Int = arcanes.size

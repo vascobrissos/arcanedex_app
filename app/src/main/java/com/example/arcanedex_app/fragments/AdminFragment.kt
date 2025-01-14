@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.arcanedex_app.Arcane
 import com.example.arcanedex_app.ArcaneAdapter
 import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.api.RetrofitClient
@@ -30,9 +31,12 @@ class AdminFragment : Fragment() {
     private lateinit var adapter: ArcaneAdapter
     private lateinit var searchView: SearchView
     private lateinit var totalCountTextView: TextView
-    private val arcaneList = mutableListOf<String>() // List of creatures' names
-    private val filteredList = mutableListOf<String>()
+    private lateinit var loadMoreButton: Button
+    private val arcaneList = mutableListOf<Arcane>() // List of Arcane objects
+    private val filteredList = mutableListOf<Arcane>()
     private var currentPage = 1 // Current page for pagination
+    private val pageSize = 6 // Number of items to fetch per page
+    private var totalCreaturesCount = 0 // Total number of creatures in the backend
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,17 +53,25 @@ class AdminFragment : Fragment() {
         recyclerView = view.findViewById(R.id.arcanesRecyclerView)
         searchView = view.findViewById(R.id.searchView)
         totalCountTextView = view.findViewById(R.id.totalCountTextView)
+        loadMoreButton = view.findViewById(R.id.loadMoreButton) // Button to load more
         val addButton = view.findViewById<FloatingActionButton>(R.id.addFloatingButton)
 
         // Configure RecyclerView
         adapter = ArcaneAdapter(
-            filteredList,
+            arcanes = filteredList,
             onEditClick = { arcane, position ->
                 showEditDialog(arcane) { newName, newDescription ->
-                    val originalPosition = arcaneList.indexOf(arcane)
+                    // Update local list and notify adapter
+                    val originalPosition = arcaneList.indexOfFirst { it.id == arcane.id }
                     if (originalPosition >= 0) {
-                        arcaneList[originalPosition] = newName
-                        filteredList[position] = newName
+                        arcaneList[originalPosition] = arcane.copy(
+                            name = newName,
+                            description = newDescription
+                        )
+                        filteredList[position] = arcane.copy(
+                            name = newName,
+                            description = newDescription
+                        )
                         adapter.notifyItemChanged(position)
                         updateTotalCount()
                         Toast.makeText(
@@ -67,24 +79,6 @@ class AdminFragment : Fragment() {
                             "Arcane updated: $newName",
                             Toast.LENGTH_SHORT
                         ).show()
-                    }
-                }
-            },
-            onDeleteClick = { arcane ->
-                showDeleteConfirmationDialog(arcane) { confirmed ->
-                    if (confirmed) {
-                        val position = filteredList.indexOf(arcane)
-                        if (position >= 0) {
-                            filteredList.removeAt(position)
-                            arcaneList.remove(arcane)
-                            adapter.notifyItemRemoved(position)
-                            updateTotalCount()
-                            Toast.makeText(
-                                requireContext(),
-                                "Arcane deleted: $arcane",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
                     }
                 }
             }
@@ -108,15 +102,53 @@ class AdminFragment : Fragment() {
 
         addButton.setOnClickListener {
             showEditDialog(null) { name, description ->
-                arcaneList.add(name)
-                filterList(searchView.query.toString())
-                adapter.notifyItemInserted(filteredList.size - 1)
-                updateTotalCount()
-                Toast.makeText(requireContext(), "Arcane added: $name", Toast.LENGTH_SHORT).show()
+                val token = SharedPreferencesHelper.getToken(requireContext())
+                if (token != null) {
+                    addButton.isEnabled = false
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val request =
+                            CreatureRequestAdmin(Name = name, Lore = description, Img = null)
+                        val response = RetrofitClient.instance.addCreature(request, "Bearer $token")
+
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                val newArcane = Arcane(
+                                    id = id,
+                                    name = name,
+                                    description = description
+                                )
+                                arcaneList.add(newArcane)
+                                filteredList.add(newArcane)
+                                adapter.notifyItemInserted(filteredList.size - 1)
+                                updateTotalCount()
+
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Arcane added: $name",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Failed to add arcane: ${response.errorBody()?.string()}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            addButton.isEnabled = true
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
-        updateTotalCount() // Initialize total count display
+        loadMoreButton.setOnClickListener {
+            fetchCreatures(loadMore = true)
+        }
+
+        updateTotalCount()
     }
 
     private fun filterList(query: String?) {
@@ -125,7 +157,9 @@ class AdminFragment : Fragment() {
         if (searchQuery.isEmpty()) {
             filteredList.addAll(arcaneList)
         } else {
-            filteredList.addAll(arcaneList.filter { it.lowercase().contains(searchQuery) })
+            filteredList.addAll(arcaneList.filter {
+                it.name.lowercase().contains(searchQuery)
+            })
         }
         adapter.notifyDataSetChanged()
     }
@@ -134,14 +168,68 @@ class AdminFragment : Fragment() {
         totalCountTextView.text = "Total: ${arcaneList.size} creatures"
     }
 
-    private fun showEditDialog(arcane: String?, onSave: (String, String) -> Unit) {
+    private fun fetchCreatures(loadMore: Boolean = false) {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitClient.instance.getAllCreatures(
+                        token = "Bearer $token",
+                        page = currentPage,
+                        limit = pageSize,
+                        name = "",
+                        onlyFavoriteArcanes = false,
+                        toSaveOffline = false
+                    )
+                    withContext(Dispatchers.Main) {
+                        if (loadMore) {
+                            arcaneList.addAll(response.data.map { Arcane(it.Id, it.Name, it.Lore) })
+                        } else {
+                            arcaneList.clear()
+                            arcaneList.addAll(response.data.map { Arcane(it.Id, it.Name, it.Lore) })
+                        }
+
+                        filteredList.clear()
+                        filteredList.addAll(arcaneList)
+
+                        adapter.notifyDataSetChanged()
+                        totalCreaturesCount = response.count
+                        currentPage++
+
+                        updateTotalCount()
+                        toggleLoadMoreButton()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to fetch creatures",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun toggleLoadMoreButton() {
+        loadMoreButton.visibility =
+            if (arcaneList.size < totalCreaturesCount) View.VISIBLE else View.GONE
+    }
+
+    private fun showEditDialog(arcane: Arcane?, onSave: (String, String) -> Unit) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_arcane, null)
         val arcaneNameEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneName)
         val arcaneDescriptionEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneDescription)
+        val saveButton = dialogView.findViewById<Button>(R.id.buttonSave)
+        val cancelButton = dialogView.findViewById<Button>(R.id.buttonCancel)
 
+        // Pre-fill fields for edit
         arcane?.let {
-            arcaneNameEditText.setText(it)
-            arcaneDescriptionEditText.setText("Existing description") // Placeholder
+            arcaneNameEditText.setText(it.name)
+            arcaneDescriptionEditText.setText(it.description)
         }
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -149,8 +237,8 @@ class AdminFragment : Fragment() {
             .setCancelable(false)
             .create()
 
-        dialogView.findViewById<Button>(R.id.buttonCancel).setOnClickListener { dialog.dismiss() }
-        dialogView.findViewById<Button>(R.id.buttonSave).setOnClickListener {
+        cancelButton.setOnClickListener { dialog.dismiss() }
+        saveButton.setOnClickListener {
             val newName = arcaneNameEditText.text.toString().trim()
             val newDescription = arcaneDescriptionEditText.text.toString().trim()
 
@@ -159,27 +247,53 @@ class AdminFragment : Fragment() {
             } else {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token != null) {
+                    saveButton.isEnabled = false
+                    cancelButton.isEnabled = false
+
                     CoroutineScope(Dispatchers.IO).launch {
                         val request =
                             CreatureRequestAdmin(Name = newName, Lore = newDescription, Img = null)
                         val response = if (arcane == null) {
                             RetrofitClient.instance.addCreature(request, "Bearer $token")
                         } else {
-                            val arcaneId =
-                                arcaneList.indexOf(arcane) + 1 // Replace with real ID logic
-                            RetrofitClient.instance.editCreature(arcaneId, request, "Bearer $token")
+                            RetrofitClient.instance.editCreature(
+                                arcane.id,
+                                request,
+                                "Bearer $token"
+                            )
                         }
 
                         withContext(Dispatchers.Main) {
                             if (response.isSuccessful) {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Saved successfully!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                fetchCreatures()
+                                if (arcane == null) {
+                                    val newArcane = Arcane(
+                                        id = id,
+                                        name = newName,
+                                        description = newDescription
+                                    )
+                                    arcaneList.add(newArcane)
+                                    filteredList.add(newArcane)
+                                    adapter.notifyItemInserted(filteredList.size - 1)
+                                } else {
+                                    val index = arcaneList.indexOfFirst { it.id == arcane.id }
+                                    if (index >= 0) {
+                                        arcaneList[index] = arcane.copy(
+                                            name = newName,
+                                            description = newDescription
+                                        )
+                                        filteredList[index] = arcane.copy(
+                                            name = newName,
+                                            description = newDescription
+                                        )
+                                        adapter.notifyItemChanged(index)
+                                    }
+                                }
+
+                                updateTotalCount()
                                 dialog.dismiss()
                             } else {
+                                saveButton.isEnabled = true
+                                cancelButton.isEnabled = true
                                 Toast.makeText(
                                     requireContext(),
                                     "Failed: ${response.errorBody()?.string()}",
@@ -195,50 +309,5 @@ class AdminFragment : Fragment() {
         }
 
         dialog.show()
-    }
-
-    private fun showDeleteConfirmationDialog(arcane: String, onConfirm: (Boolean) -> Unit) {
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Confirm Deletion")
-            .setMessage("Are you sure you want to delete '$arcane'?")
-            .setPositiveButton("Yes") { _, _ -> onConfirm(true) }
-            .setNegativeButton("No") { _, _ -> onConfirm(false) }
-            .setCancelable(true)
-            .create()
-        dialog.show()
-    }
-
-    private fun fetchCreatures() {
-        val token = SharedPreferencesHelper.getToken(requireContext())
-        if (token != null) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = RetrofitClient.instance.getAllCreatures(
-                        token = "Bearer $token",
-                        page = currentPage,
-                        limit = 6,
-                        name = "",
-                        onlyFavoriteArcanes = false,
-                        toSaveOffline = false
-                    )
-                    withContext(Dispatchers.Main) {
-                        arcaneList.clear()
-                        arcaneList.addAll(response.data.map { it.Name })
-                        filterList(searchView.query.toString())
-                        updateTotalCount()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to fetch creatures",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-        } else {
-            Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
-        }
     }
 }
