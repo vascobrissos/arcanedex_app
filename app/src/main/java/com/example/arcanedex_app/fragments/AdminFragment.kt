@@ -193,7 +193,7 @@ class AdminFragment : Fragment() {
                         limit = pageSize,
                         name = "",
                         onlyFavoriteArcanes = false,
-                        toSaveOffline = false
+                        toSaveOffline = true
                     )
                     withContext(Dispatchers.Main) {
                         if (loadMore) {
