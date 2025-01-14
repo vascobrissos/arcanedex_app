@@ -160,10 +160,10 @@ class Register : AppCompatActivity() {
                 finish() // Fecha a actividade de registo
             } else {
                 val translatedMessage = when {
-                    errorMessage?.contains("Email already in use", ignoreCase = true) == true ->
+                        errorMessage?.contains("Email já está em uso", ignoreCase = true) == true ->
                         "Email já existe"
 
-                    errorMessage?.contains("Username already in use", ignoreCase = true) == true ->
+                    errorMessage?.contains("Nome de utilizador já está em uso", ignoreCase = true) == true ->
                         "Utilizador já existe"
                     else -> "Registo falhou: $errorMessage"
                 }

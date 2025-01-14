@@ -181,11 +181,9 @@ class MainActivity : AppCompatActivity() {
                     intent.putExtra("role", role)
                     startActivity(intent)
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(this, "Erro ao decodificar token!", Toast.LENGTH_LONG).show()
                 }
             } else {
-                Toast.makeText(this, "Não foi possível iniciar sessão: $errorMessage", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "$errorMessage", Toast.LENGTH_LONG).show()
             }
         }
     }

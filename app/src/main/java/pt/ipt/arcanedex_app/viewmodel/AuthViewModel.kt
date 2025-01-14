@@ -33,7 +33,7 @@ class AuthViewModel : ViewModel() {
                 onResult(true, null) // Sucesso
             } catch (e: HttpException) {
                 // Lida com erro da API
-                val errorMessage = e.response()?.errorBody()?.string() ?: "Erro desconhecido"
+                val errorMessage = e.response()?.errorBody()?.string() ?: ""
                 onResult(false, errorMessage)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -61,21 +61,19 @@ class AuthViewModel : ViewModel() {
                 onResult(response.token, null) // Sucesso
             } catch (e: HttpException) {
                 // Extrai a mensagem de erro da resposta da API
-                val rawErrorMessage = e.response()?.errorBody()?.string() ?: "Erro desconhecido"
+                val rawErrorMessage = e.response()?.errorBody()?.string() ?: ""
 
-                // Traduz erros específicos
+                // Debug para verificar a mensagem recebida
+                println("Erro da API: $rawErrorMessage")
+
+                // Traduz erros específicos ou usa uma mensagem padrão
                 val translatedErrorMessage = when {
-                    rawErrorMessage.contains(
-                        "Invalid password",
-                        ignoreCase = true
-                    ) -> "Password errada"
+                    rawErrorMessage.contains("Password inválida", ignoreCase = true) ||
+                            rawErrorMessage.contains("Utilizador não encontrado", ignoreCase = true) ->
+                        "As credenciais fornecidas estão incorretas"
 
-                    rawErrorMessage.contains(
-                        "User not found",
-                        ignoreCase = true
-                    ) -> "Utilizador não existe"
 
-                    else -> "Erro desconhecido: $rawErrorMessage"
+                    else -> "Erro inesperado. Por favor, tente novamente."
                 }
 
                 // Retorna a mensagem de erro traduzida
@@ -86,4 +84,6 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
+
 }

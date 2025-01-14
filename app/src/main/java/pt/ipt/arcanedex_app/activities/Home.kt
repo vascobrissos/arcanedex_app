@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.auth0.android.jwt.JWT
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.utils.NetworkReceiver
@@ -86,11 +87,14 @@ class Home : AppCompatActivity() {
              */
             override fun onNetworkChange(isConnected: Boolean) {
                 if (!isConnected) {
+                    SharedPreferencesHelper.setOffline(this@Home, true) // Marca como offline
                     Toast.makeText(this@Home, "Sem ligação à internet", Toast.LENGTH_SHORT).show()
                     SharedPreferencesHelper.clearToken(this@Home) // Limpa o token
                     val intent = Intent(this@Home, OfflineActivity::class.java)
                     startActivity(intent)
                     finish()
+                } else {
+                    SharedPreferencesHelper.setOffline(this@Home, false) // Reseta a flag ao reconectar
                 }
             }
         }
@@ -100,11 +104,21 @@ class Home : AppCompatActivity() {
      * Redireciona o utilizador para a MainActivity e termina a actividade actual.
      */
     private fun redirectToMainActivity() {
-        Toast.makeText(
-            this,
-            "Sessão expirada. Por favor, volte a iniciar sessão.",
-            Toast.LENGTH_SHORT
-        ).show()
+
+        val wasLoggedOut = SharedPreferencesHelper.wasUserLoggedOut(this)
+        val isTokenValid = SharedPreferencesHelper.checkTokenValidity(this)
+        val isOffline = SharedPreferencesHelper.isOffline(this)
+
+        if (!isTokenValid && !wasLoggedOut && !isOffline) {
+            Toast.makeText(
+                this,
+                "Sessão expirada. Por favor, volte a iniciar sessão.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        // Limpa a flag após uso
+        SharedPreferencesHelper.setUserLoggedOut(this, false)
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)

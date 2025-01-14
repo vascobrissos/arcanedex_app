@@ -18,6 +18,62 @@ object SharedPreferencesHelper {
 
     // Chave para armazenar se o utilizador aceitou os termos
     private const val KEY_HAS_ACCEPTED_TERMS = "hasAcceptedTerms"
+    /**
+     * Key used to store the offline state in shared preferences.
+     */
+    private const val KEY_IS_OFFLINE = "isOffline"
+
+    /**
+     * Sets the offline state of the user in shared preferences.
+     *
+     * @param context The context of the calling component.
+     * @param isOffline Boolean indicating whether the user is offline.
+     */
+    fun setOffline(context: Context, isOffline: Boolean) {
+        getSharedPreferences(context)
+            .edit()
+            .putBoolean(KEY_IS_OFFLINE, isOffline)
+            .apply()
+    }
+
+    /**
+     * Retrieves the offline state of the user from shared preferences.
+     *
+     * @param context The context of the calling component.
+     * @return Boolean indicating whether the user is offline.
+     */
+    fun isOffline(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_IS_OFFLINE, false)
+    }
+
+    /**
+     * Key used to store the logged-out state in shared preferences.
+     */
+    private const val KEY_LOGGED_OUT = "loggedOut"
+
+    /**
+     * Sets the logged-out state of the user in shared preferences.
+     *
+     * @param context The context of the calling component.
+     * @param isLoggedOut Boolean indicating whether the user has logged out.
+     */
+    fun setUserLoggedOut(context: Context, isLoggedOut: Boolean) {
+        getSharedPreferences(context)
+            .edit()
+            .putBoolean(KEY_LOGGED_OUT, isLoggedOut)
+            .apply()
+    }
+
+    /**
+     * Retrieves the logged-out state of the user from shared preferences.
+     *
+     * @param context The context of the calling component.
+     * @return Boolean indicating whether the user was logged out.
+     */
+    fun wasUserLoggedOut(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_LOGGED_OUT, false)
+    }
+
 
     /**
      * Recupera a instância das preferências partilhadas para a aplicação.

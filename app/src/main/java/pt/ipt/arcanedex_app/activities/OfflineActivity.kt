@@ -127,6 +127,7 @@ class OfflineActivity : AppCompatActivity() {
                 runOnUiThread {
                     isNavigatingToLogin = true // Evita múltiplas navegações
                     SharedPreferencesHelper.clearToken(this@OfflineActivity) // Limpa o token
+                    Toast.makeText(this@OfflineActivity, "Ligação retomada", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@OfflineActivity, MainActivity::class.java)
                     startActivity(intent) // Inicia a atividade de login
                     finish() // Termina a atividade atual

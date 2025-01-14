@@ -82,6 +82,7 @@ class SettingsFragment : Fragment() {
      * Termina a sessão do utilizador e redireciona para a página inicial.
      */
     private fun logoutUser() {
+        SharedPreferencesHelper.setUserLoggedOut(requireContext(), true)
         SharedPreferencesHelper.clearToken(requireContext())
         val intent = Intent(requireContext(), MainActivity::class.java)
         startActivity(intent)
