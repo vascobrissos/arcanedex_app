@@ -43,6 +43,9 @@ class DetailFragment : Fragment() {
     private val CAMERA_PERMISSION_CODE = 101
     private var photoUri: Uri? = null
     private val sharedCardItemViewModel: SharedCardItemViewModel by activityViewModels()
+    private lateinit var backgroundView: ImageView
+    private var loadingOperations = 0
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,26 +57,25 @@ class DetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        progressBar = view.findViewById(R.id.loading_spinner)
+        progressBar.visibility = View.GONE // Inicialmente oculto
+
         val cardItem = sharedCardItemViewModel.selectedCardItem
         if (cardItem == null) {
-            Toast.makeText(requireContext(), "Failed to load card details", Toast.LENGTH_SHORT).show()
             requireActivity().onBackPressed()
             return
         }
 
         val addBackground = view.findViewById<ImageView>(R.id.cameraImage)
         val removeBackground = view.findViewById<ImageView>(R.id.defaultImage)
-        val backgroundView = view.findViewById<ImageView>(R.id.backgroundView)
+        backgroundView = view.findViewById<ImageView>(R.id.backgroundView)
         val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
         val descriptionTextView = view.findViewById<TextView>(R.id.descriptionTextView)
         val imageView = view.findViewById<ImageView>(R.id.imageView)
-        val progressBar = view.findViewById<ProgressBar>(R.id.loading_spinner)
 
-        // Populate UI with CardItem details
+        // Populate UI
         titleTextView.text = cardItem.Name
         descriptionTextView.text = cardItem.Lore ?: "No description available"
-
-
 
         cardItem.Img?.let { img ->
             Glide.with(requireContext())
@@ -83,10 +85,10 @@ class DetailFragment : Fragment() {
             imageView.setBackgroundResource(R.color.primary) // Default background
         }
 
-        // Fetch and apply background image to backgroundView using Glide
-        fetchAndApplyBackground(cardItem.Id, backgroundView, progressBar)
+        // Fetch and apply background image
+        fetchAndApplyBackground(cardItem.Id, backgroundView)
 
-        // Show buttons only if the card is marked as favorite
+        // Handle visibility of buttons
         if (cardItem.isFavorite) {
             addBackground.visibility = View.VISIBLE
             removeBackground.visibility = View.VISIBLE
@@ -105,117 +107,88 @@ class DetailFragment : Fragment() {
 
         removeBackground.setOnClickListener {
             val token = SharedPreferencesHelper.getToken(requireContext())
-            if (token == null) {
-                Toast.makeText(requireContext(), "Missing data for API call", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
+            if (token == null) return@setOnClickListener
 
-            AlertDialog.Builder(requireContext()).setTitle("Remove Background")
-                .setMessage("Are you sure you want to remove the background?")
-                .setPositiveButton("Yes") { _, _ ->
-                    resetBackgroundToDefault(cardItem.Id, token, progressBar)
-                }.setNegativeButton("No", null).show()
+            AlertDialog.Builder(requireContext()).setTitle("Remove fundo")
+                .setMessage("Tens a certeza que queres remover o fundo?")
+                .setPositiveButton("Sim") { _, _ ->
+                    resetBackgroundToDefault(cardItem.Id, token)
+                }.setNegativeButton("Não", null).show()
         }
     }
 
-    private fun fetchAndApplyBackground(creatureId: Int, imageView: ImageView, progressBar: ProgressBar) {
+    private fun applyBackgroundWithGlide(base64Image: String, imageView: ImageView) {
+        val imageUrl = base64Image
+        Glide.with(requireContext())
+            .load(imageUrl)
+            .into(imageView)
+    }
+
+    private fun fetchAndApplyBackground(creatureId: Int, imageView: ImageView) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
             Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
             return
         }
 
-        progressBar.visibility = View.VISIBLE
+        setLoading(true)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitClient.instance.getCreatureDetails(
                     creatureId = creatureId,
                     token = "Bearer $token"
                 )
-
-
-
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
                     if (response.isSuccessful) {
                         val backgroundImgBase64 = response.body()?.BackgroundImg
                         if (!backgroundImgBase64.isNullOrEmpty()) {
-                            Log.d("tuamassa ", backgroundImgBase64)
                             applyBackgroundWithGlide(backgroundImgBase64, imageView)
-                        } else {
-                            Toast.makeText(
-                                requireContext(),
-                                "No background image available",
-                                Toast.LENGTH_SHORT
-                            ).show()
                         }
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to fetch background image: ${response.message()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
+                    setLoading(false)
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
-                    Log.e("API Failure", e.message ?: "Unknown error")
-                    Toast.makeText(
-                        requireContext(),
-                        "Error fetching background: ${e.localizedMessage}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                withContext(Dispatchers.Main) { setLoading(false) }
             }
         }
     }
 
-    private fun resetBackgroundToDefault(creatureId: Int, token: String, progressBar: ProgressBar) {
-        progressBar.visibility = View.VISIBLE
+    private fun resetBackgroundToDefault(creatureId: Int, token: String) {
+
+        backgroundView.setImageDrawable(null)
+        setLoading(true)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitClient.instance.resetFavouriteCreatureBackground(
                     creatureId = creatureId, token = "Bearer $token"
                 )
-
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
                     if (response.isSuccessful) {
                         Toast.makeText(
                             requireContext(),
-                            "Background reset to default successfully!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        val errorMessage = response.errorBody()?.string() ?: "Unknown error"
-                        Log.e("API Error", errorMessage)
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to reset background: $errorMessage",
+                            "Fundo resetado com sucesso!",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
+                    setLoading(false)
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
-                    Log.e("API Failure", e.message ?: "Unknown error")
-                    Toast.makeText(
-                        requireContext(), "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT
-                    ).show()
-                }
+                withContext(Dispatchers.Main) { setLoading(false) }
             }
         }
     }
 
-    private fun applyBackgroundWithGlide(base64Image: String, imageView: ImageView) {
-        val imageUrl = base64Image
-        Log.d("tuamas ", imageUrl)
-        Glide.with(requireContext())
-            .load(imageUrl)
-            .into(imageView)
+    private fun setLoading(loading: Boolean) {
+        if (loading) {
+            loadingOperations++
+            progressBar.visibility = View.VISIBLE
+        } else {
+            loadingOperations--
+            if (loadingOperations <= 0) {
+                loadingOperations = 0
+                progressBar.visibility = View.GONE
+            }
+        }
     }
 
     private fun hasCameraPermission(): Boolean {
@@ -247,7 +220,7 @@ class DetailFragment : Fragment() {
                 startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE)
             }
         } else {
-            Toast.makeText(requireContext(), "No camera app found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Câmera não encontrada", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -274,7 +247,7 @@ class DetailFragment : Fragment() {
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "Camera permission is required to take a picture",
+                    "É preciso permissão para usar a câmera",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -291,9 +264,9 @@ class DetailFragment : Fragment() {
                 val (base64Image, mimeType) = encodeImageToBase64(bitmap, format)
 
                 // Call the API with the encoded image
-                sendImageToApi(base64Image, mimeType)
+                sendImageToApi(base64Image, mimeType, backgroundView)
             } ?: run {
-                Toast.makeText(requireContext(), "Failed to capture image", Toast.LENGTH_SHORT)
+                Toast.makeText(requireContext(), "Falha na captura de fotografia", Toast.LENGTH_SHORT)
                     .show()
             }
         }
@@ -307,7 +280,7 @@ class DetailFragment : Fragment() {
         val mimeType = when (format) {
             Bitmap.CompressFormat.JPEG -> "image/jpeg"
             Bitmap.CompressFormat.PNG -> "image/png"
-            else -> throw IllegalArgumentException("Unsupported format: $format")
+            else -> throw IllegalArgumentException("Formato não suportado: $format")
         }
         bitmap.compress(format, 50, outputStream)
         val byteArray = outputStream.toByteArray()
@@ -315,7 +288,7 @@ class DetailFragment : Fragment() {
         return Pair(base64Image, mimeType)
     }
 
-    private fun sendImageToApi(base64Image: String, mimeType: String) {
+    private fun sendImageToApi(base64Image: String, mimeType: String, view: ImageView) {
         val cardItem = sharedCardItemViewModel.selectedCardItem
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null || cardItem == null) {
@@ -326,6 +299,7 @@ class DetailFragment : Fragment() {
         val backgroundImg = "data:$mimeType;base64,$base64Image"
         val request = BackgroundImageRequest(BackgroundImg = backgroundImg)
 
+        setLoading(true)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitClient.instance.changeFavouriteCreatureBackground(
@@ -341,6 +315,7 @@ class DetailFragment : Fragment() {
                             "Background atualizado com sucesso!",
                             Toast.LENGTH_SHORT
                         ).show()
+                        applyBackgroundWithGlide(backgroundImg, view)
                     } else {
                         val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
                         Log.e("API Error", errorMessage)
@@ -350,6 +325,7 @@ class DetailFragment : Fragment() {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
+                    setLoading(false)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -359,6 +335,7 @@ class DetailFragment : Fragment() {
                         "Falha na requisição: ${e.localizedMessage}",
                         Toast.LENGTH_SHORT
                     ).show()
+                    setLoading(false)
                 }
             }
         }
