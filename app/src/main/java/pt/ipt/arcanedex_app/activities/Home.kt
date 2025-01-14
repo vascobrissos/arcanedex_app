@@ -1,14 +1,23 @@
 package pt.ipt.arcanedex_app.activities
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import pt.ipt.arcanedex_app.utils.NetworkReceiver
 
 class Home : AppCompatActivity() {
+
+    private lateinit var networkReceiver: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,7 +27,7 @@ class Home : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragments) as NavHostFragment
         val navController = navHostFragment.navController
-        val isAdmin = SharedPreferencesHelper.isUserAdmin(this) // Implementar método para verificar
+        val isAdmin = SharedPreferencesHelper.isUserAdmin(this) // Verificar se o usuário é admin
 
         // Configure o BottomNavigationView
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
@@ -52,5 +61,29 @@ class Home : AppCompatActivity() {
                 else -> false
             }
         }
+
+        // Configura o NetworkReceiver
+        networkReceiver = object : NetworkReceiver() {
+            override fun onNetworkChange(isConnected: Boolean) {
+                if (!isConnected) {
+                    Toast.makeText(this@Home, "Sem conexão à internet", Toast.LENGTH_SHORT).show()
+                    SharedPreferencesHelper.clearToken(this@Home) // Limpa o token
+                    val intent = Intent(this@Home, OfflineActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        registerReceiver(networkReceiver, filter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(networkReceiver)
     }
 }

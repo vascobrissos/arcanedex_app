@@ -1,6 +1,10 @@
 package pt.ipt.arcanedex_app.activities
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,17 +32,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var usernameText: EditText
     private lateinit var passwordText: EditText
     private val authViewModel: AuthViewModel by viewModels()
+    private lateinit var networkReceiver: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        // Redireciona se não houver internet
-        if (!SharedPreferencesHelper.isInternetAvailable(this)) {
-            val intent = Intent(this, OfflineActivity::class.java)
-            startActivity(intent)
-            return
-        }
 
         // Verifica se o usuário aceitou os termos
         if (!SharedPreferencesHelper.hasAcceptedTerms(this)) {
@@ -90,6 +88,31 @@ class MainActivity : AppCompatActivity() {
         aboutUsImageView.setOnClickListener {
             showAboutUsDialog()
         }
+
+        // Configura o receiver para monitorar conexão de internet
+        networkReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (!SharedPreferencesHelper.isInternetAvailable(context!!)) {
+                    // Redireciona para OfflineActivity
+                    val offlineIntent = Intent(this@MainActivity, OfflineActivity::class.java)
+                    startActivity(offlineIntent)
+                    finish() // Fecha a atividade atual
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Registra o NetworkReceiver para monitorar mudanças na conectividade
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        registerReceiver(networkReceiver, filter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Remove o registro do receiver para evitar vazamentos de memória
+        unregisterReceiver(networkReceiver)
     }
 
     fun buttonClick(view: View?) {

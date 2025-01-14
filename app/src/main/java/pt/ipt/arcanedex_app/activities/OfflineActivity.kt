@@ -24,7 +24,7 @@ class OfflineActivity : AppCompatActivity() {
     private lateinit var adapter: CardAdapter
     private val cardItems = mutableListOf<CardItem>()
     private var timer: Timer? = null
-    private var isNavigatingToMain = false // Evitar múltiplas transições para MainActivity
+    private var isNavigatingToLogin = false // Evitar múltiplas transições para MainActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,9 +84,10 @@ class OfflineActivity : AppCompatActivity() {
     private fun startInternetCheck() {
         timer = Timer()
         timer?.schedule(timerTask {
-            if (!isNavigatingToMain && SharedPreferencesHelper.isInternetAvailable(this@OfflineActivity)) {
+            if (!isNavigatingToLogin && SharedPreferencesHelper.isInternetAvailable(this@OfflineActivity)) {
                 runOnUiThread {
-                    isNavigatingToMain = true // Evita múltiplas navegações
+                    isNavigatingToLogin = true // Evita múltiplas navegações
+                    SharedPreferencesHelper.clearToken(this@OfflineActivity) // Limpa o token ao voltar para o login
                     val intent = Intent(this@OfflineActivity, MainActivity::class.java)
                     startActivity(intent)
                     finish()
