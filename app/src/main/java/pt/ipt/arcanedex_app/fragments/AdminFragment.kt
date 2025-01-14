@@ -8,21 +8,20 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.SearchView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import pt.ipt.arcanedex_app.Arcane
-import pt.ipt.arcanedex_app.ArcaneAdapter
-import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.models.creature.CreatureRequestAdmin
-import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +29,18 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pt.ipt.arcanedex_app.Arcane
+import pt.ipt.arcanedex_app.ArcaneAdapter
+import pt.ipt.arcanedex_app.R
+import pt.ipt.arcanedex_app.data.api.RetrofitClient
+import pt.ipt.arcanedex_app.data.models.Creature.CreatureRequestAdmin
+import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import java.io.ByteArrayOutputStream
 
+/**
+ * Atividade responsável por apresentar a página de gestão de Arcanes
+ */
 class AdminFragment : Fragment() {
-
     // === Variáveis Globais ===
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ArcaneAdapter
@@ -53,10 +60,23 @@ class AdminFragment : Fragment() {
     private var imagePreview: ImageView? = null
 
     // === Ciclo de Vida ===
+    /**
+     * Infla o layout do fragmento e configura a interface do utilizador.
+     *
+     * @param inflater O inflater utilizado para inflar o layout.
+     * @param container O container onde o layout será colocado.
+     * @param savedInstanceState O estado anterior do fragmento, caso exista.
+     * @return A vista inflada do fragmento.
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_admin, container, false)
     }
 
+    /**
+     * Configura os elementos da UI e realiza a chamada para buscar as criaturas.
+     *
+     * @param view A vista inflada para o fragmento.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -65,6 +85,11 @@ class AdminFragment : Fragment() {
     }
 
     // === Configurações de UI ===
+    /**
+     * Configura os elementos da interface de utilizador, como RecyclerView, SearchView, botões, etc.
+     *
+     * @param view A vista inflada para o fragmento.
+     */
     private fun setupUI(view: View) {
         recyclerView = view.findViewById(R.id.arcanesRecyclerView)
         searchView = view.findViewById(R.id.searchView)
@@ -85,6 +110,7 @@ class AdminFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        // Configuração do SearchView para buscar as criaturas
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 fetchCreatures(searchQuery = query)
@@ -101,22 +127,35 @@ class AdminFragment : Fragment() {
             }
         })
 
+        // Configura o botão de adicionar novo Arcane
         addButton.setOnClickListener {
             showEditDialog(null) { name, description, image ->
                 addArcane(name, description, image)
             }
         }
 
+        // Configura o botão de carregar mais criaturas
         loadMoreButton.setOnClickListener {
             fetchCreatures(loadMore = true)
         }
     }
 
     // === Atualizações Locais ===
+    /**
+     * Atualiza o contador total de criaturas na interface de utilizador.
+     */
     private fun updateTotalCount() {
         totalCountTextView.text = "Total: $totalCreaturesCount criaturas"
     }
 
+    /**
+     * Atualiza as informações de um Arcane na lista local, refletindo a alteração na interface.
+     *
+     * @param id O ID do Arcane a ser atualizado.
+     * @param newName O novo nome do Arcane.
+     * @param newDescription A nova descrição do Arcane.
+     * @param position A posição do Arcane na lista.
+     */
     private fun updateArcaneLocally(id: Int, newName: String, newDescription: String, position: Int) {
         val index = arcaneList.indexOfFirst { it.id == id }
         if (index >= 0) {
@@ -130,8 +169,16 @@ class AdminFragment : Fragment() {
     }
 
     // === Manipulação de Criaturas ===
+    /**
+     * Função responsável por buscar as criaturas do servidor.
+     * A função pode carregar mais criaturas ou fazer uma nova pesquisa, com base nos parâmetros fornecidos.
+     *
+     * @param loadMore Indica se a função deve carregar mais criaturas ou não. O valor padrão é `false`.
+     * @param searchQuery A consulta de pesquisa para filtrar as criaturas. O valor padrão é `null`, que significa que todas as criaturas serão retornadas.
+     */
     private fun fetchCreatures(loadMore: Boolean = false, searchQuery: String? = null) {
 
+        // Exibe o spinner de carregamento enquanto aguarda os dados
         view?.findViewById<ProgressBar>(R.id.loading_spinner)?.visibility = View.VISIBLE
         view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
         view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
@@ -143,6 +190,7 @@ class AdminFragment : Fragment() {
         if (token != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
+                    // Faz a chamada à API para buscar as criaturas
                     val response = RetrofitClient.instance.getAdminAllCreatures(
                         token = "Bearer $token",
                         page = if (loadMore) currentPage else 1,
@@ -152,6 +200,7 @@ class AdminFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         if (response.isSuccessful) {
                             val responseData = response.body()
+                            // Mapeia os dados recebidos para objetos Arcane
                             val creatures = responseData?.data?.map { creature ->
                                 Arcane(
                                     id = creature.Id,
@@ -161,6 +210,7 @@ class AdminFragment : Fragment() {
                                 )
                             } ?: emptyList()
 
+                            // Atualiza a lista de criaturas dependendo se é uma carga inicial ou de mais itens
                             if (loadMore) {
                                 arcaneList.addAll(creatures)
                             } else {
@@ -170,45 +220,61 @@ class AdminFragment : Fragment() {
 
                             adapter.notifyDataSetChanged()
 
+                            // Esconde o spinner de carregamento e mostra a lista de criaturas ou mensagem de "nenhum dado"
                             view?.findViewById<ProgressBar>(R.id.loading_spinner)?.visibility = View.GONE
                             if (arcaneList.isEmpty()) {
                                 view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
                                 view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
-
                             } else {
                                 recyclerView.visibility = View.VISIBLE
                                 view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
                                 view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                             }
+                            // Mostra o botão flutuante de adicionar e atualiza o contador total de criaturas
                             view?.findViewById<FloatingActionButton>(R.id.addFloatingButton)?.visibility = View.VISIBLE
                             totalCreaturesCount = responseData?.totalCount ?: 0
                             if (!loadMore) currentPage = 1
                             currentPage++
 
+                            // Exibe ou oculta o botão de "carregar mais", dependendo do total de criaturas
                             loadMoreButton.visibility =
                                 if (arcaneList.size >= totalCreaturesCount) View.GONE else View.VISIBLE
                             updateTotalCount()
                             toggleLoadMoreButton()
                         } else {
+                            // Exibe uma mensagem de erro caso a resposta da API falhe
                             Toast.makeText(requireContext(), "Erro ao encontrar criaturas", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } catch (e: Exception) {
+                    // Exibe uma mensagem de erro caso ocorra uma falha na requisição
                     withContext(Dispatchers.Main) {
                         Toast.makeText(requireContext(), "Falha na requisição: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         } else {
+            // Exibe uma mensagem caso o token de autenticação não seja encontrado
             Toast.makeText(requireContext(), "Token não encontrado", Toast.LENGTH_SHORT).show()
         }
     }
 
+    /**
+     * Mostra ou oculta o botão "Load More" com base no número de arcanes carregados.
+     * O botão será visível se o número de arcanes carregados for menor que o total de criaturas disponíveis.
+     */
     private fun toggleLoadMoreButton() {
         loadMoreButton.visibility =
             if (arcaneList.size < totalCreaturesCount) View.VISIBLE else View.GONE
     }
 
+    /**
+     * Adiciona um novo arcane ao sistema.
+     *
+     * @param name Nome do arcane.
+     * @param description Descrição do arcane.
+     * @param image Imagem em Base64 opcional para o arcane.
+     */
     private fun addArcane(name: String, description: String, image: String?) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token != null) {
@@ -239,6 +305,14 @@ class AdminFragment : Fragment() {
         }
     }
 
+    /**
+     * Atualiza as informações de um arcane existente.
+     *
+     * @param arcaneId ID do arcane a ser atualizado.
+     * @param name Novo nome do arcane.
+     * @param description Nova descrição do arcane.
+     * @param image Nova imagem em Base64 opcional para o arcane.
+     */
     private fun updateArcane(arcaneId: Int, name: String, description: String, image: String?) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token != null) {
@@ -250,14 +324,18 @@ class AdminFragment : Fragment() {
                     if (response.isSuccessful) {
                         Toast.makeText(requireContext(), "Arcane atualizado com sucesso!", Toast.LENGTH_SHORT).show()
                         fetchCreatures()
-                    } else {
                     }
                 }
             }
         }
     }
 
-    // === Manipulação de Diálogos ===
+    /**
+     * Exibe um diálogo para editar ou adicionar um arcane.
+     *
+     * @param arcane O arcane a ser editado, ou null para adicionar um novo.
+     * @param onSave Callback executado ao guardar as alterações ou adicionar um novo arcane.
+     */
     private fun showEditDialog(arcane: Arcane?, onSave: (String, String, String?) -> Unit) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_arcane, null)
         val arcaneNameEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneName)
@@ -305,12 +383,21 @@ class AdminFragment : Fragment() {
         dialog.show()
     }
 
-    // === Manipulação de Imagens ===
+    /**
+     * Abre o explorador de arquivos para selecionar uma imagem.
+     */
     private fun openFileExplorer() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
         startActivityForResult(intent, FILE_PICKER_REQUEST_CODE)
     }
 
+    /**
+     * Processa o resultado da seleção de imagem no explorador de arquivos.
+     *
+     * @param requestCode Código da solicitação.
+     * @param resultCode Código do resultado.
+     * @param data Dados retornados da atividade de seleção.
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {

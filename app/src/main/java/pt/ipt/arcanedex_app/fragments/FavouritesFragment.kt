@@ -1,7 +1,6 @@
 package pt.ipt.arcanedex_app.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,19 +15,22 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import pt.ipt.arcanedex_app.CardAdapter
-import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.CardItem
-import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
-import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pt.ipt.arcanedex_app.CardAdapter
+import pt.ipt.arcanedex_app.R
+import pt.ipt.arcanedex_app.data.CardItem
+import pt.ipt.arcanedex_app.data.api.RetrofitClient
+import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
+import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
 
+/**
+ * Fragmento que lista Arcanes favoritos de um utilizador.
+ */
 class FavouritesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
@@ -42,6 +44,14 @@ class FavouritesFragment : Fragment() {
     private var currentPage = 1 // Current page for pagination
     private var isLoading = false // To prevent multiple simultaneous requests
 
+    /**
+     * Infla a view do fragmento de favoritos.
+     *
+     * @param inflater O objeto LayoutInflater utilizado para inflar a view.
+     * @param container O contêiner que pode hospedar a view.
+     * @param savedInstanceState O estado previamente salvo, caso exista.
+     * @return A view inflada.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -49,6 +59,13 @@ class FavouritesFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_favourites, container, false)
     }
 
+    /**
+     * Inicializa os componentes do layout e configura a lógica de pesquisa, exibição de favoritos
+     * e a navegação para o detalhe do item selecionado.
+     *
+     * @param view A view associada ao fragmento.
+     * @param savedInstanceState O estado previamente salvo, caso exista.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -57,18 +74,22 @@ class FavouritesFragment : Fragment() {
         loadMoreButton = view.findViewById(R.id.load_more_button)
         loadingSpinner = view.findViewById(R.id.loading_spinner)
 
+        // Inicializa o estado das views
         recyclerView.visibility = View.GONE
         loadMoreButton.visibility = View.GONE
         loadingSpinner.visibility = View.VISIBLE
 
+        // Define o layout do RecyclerView
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
+        // Ação ao clicar no botão "Carregar mais"
         loadMoreButton.setOnClickListener {
             loadFavourites(name)
         }
 
         val sharedCardItemViewModel: SharedCardItemViewModel by activityViewModels()
 
+        // Inicializa o adaptador do RecyclerView
         adapter = CardAdapter(
             items = cardItems,
             onItemClick = { clickedItem ->
@@ -77,7 +98,6 @@ class FavouritesFragment : Fragment() {
                 }
                 findNavController().navigate(R.id.action_favouritesFragment_to_detailFragment)
                 sharedCardItemViewModel.selectedCardItem = clickedItem
-
             },
             onFavoriteToggle = { favoriteItem ->
                 removeFavorite(favoriteItem.Id)
@@ -87,7 +107,7 @@ class FavouritesFragment : Fragment() {
 
         recyclerView.adapter = adapter
 
-
+        // Ações ao mudar o foco do campo de pesquisa
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 loadMoreButton.visibility = View.GONE
@@ -99,6 +119,7 @@ class FavouritesFragment : Fragment() {
             }
         }
 
+        // Configura o comportamento de pesquisa com atraso
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 performSearch(query)
@@ -115,16 +136,23 @@ class FavouritesFragment : Fragment() {
             }
         })
 
-        // Load the first page of data
+        // Carrega a primeira página de dados
         if (cardItems.isEmpty()) {
             loadFavourites(name)
         }
-
     }
 
-
+    /**
+     * Carrega os itens favoritos a partir da API e atualiza a UI com os resultados.
+     *
+     * A função faz uma requisição à API para obter as criaturas favoritas, adicionando-as
+     * à lista existente. O botão "Carregar mais" só será mostrado se houver mais dados
+     * para carregar.
+     *
+     * @param name O nome para filtrar as criaturas. Se vazio, carrega todas as criaturas favoritas.
+     */
     private fun loadFavourites(name: String) {
-        if (isLoading) return // Prevent simultaneous requests
+        if (isLoading) return // Previne requisições simultâneas
         isLoading = true
 
         loadingSpinner.visibility = View.VISIBLE
@@ -151,7 +179,6 @@ class FavouritesFragment : Fragment() {
                     onlyFavoriteArcanes = true, // Somente favoritos
                     toSaveOffline = false
                 )
-
 
                 withContext(Dispatchers.Main) {
                     val newCardItems = response.data.map { creature ->
@@ -199,6 +226,15 @@ class FavouritesFragment : Fragment() {
         }
     }
 
+    /**
+     * Realiza a pesquisa de criaturas favoritas com base no texto fornecido.
+     *
+     * A função faz uma requisição à API filtrando pelo nome da criatura e atualiza a UI
+     * com os resultados encontrados. Caso a pesquisa não retorne resultados, é exibida
+     * uma mensagem informando que não há dados.
+     *
+     * @param query O texto de pesquisa para filtrar as criaturas.
+     */
     private fun performSearch(query: String?) {
         if (query.isNullOrEmpty()) {
             view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
@@ -250,7 +286,6 @@ class FavouritesFragment : Fragment() {
                     cardItems.addAll(searchResults)
                     adapter.notifyDataSetChanged()
 
-
                     if (searchResults.isEmpty()) {
                         // Mostra a imagem de "Sem Dados"
                         recyclerView.visibility = View.GONE
@@ -282,13 +317,27 @@ class FavouritesFragment : Fragment() {
         }
     }
 
-
+    /**
+     * Atualiza os dados da lista de favoritos, reiniciando a página e recarregando os itens.
+     *
+     * Esta função redefine a variável `currentPage` para 1 e limpa a lista `cardItems`.
+     * Em seguida, chama a função `loadFavourites` para recarregar os favoritos.
+     */
     private fun refreshData() {
         currentPage = 1
         cardItems.clear()
         loadFavourites(name)
     }
 
+    /**
+     * Remove uma criatura da lista de favoritos.
+     *
+     * A função envia uma requisição à API para remover a criatura identificada pelo `creatureId`
+     * dos favoritos do utilizador. Após a remoção, os dados são recarregados.
+     * Caso haja falha na remoção ou na comunicação com a API, uma mensagem de erro é exibida.
+     *
+     * @param creatureId O ID da criatura a ser removida dos favoritos.
+     */
     private fun removeFavorite(creatureId: Int) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
@@ -310,7 +359,7 @@ class FavouritesFragment : Fragment() {
                             "Removido dos Favoritos",
                             Toast.LENGTH_SHORT
                         ).show()
-                        refreshData()
+                        refreshData()  // Recarrega os dados após a remoção
                     } else {
                         Toast.makeText(
                             requireContext(),

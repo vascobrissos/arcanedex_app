@@ -1,4 +1,4 @@
-package pt.ipt.arcanedex_app.data.models
+package pt.ipt.arcanedex_app.data.models.Creature
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

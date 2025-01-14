@@ -20,20 +20,44 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.auth0.android.jwt.JWT
-import pt.ipt.arcanedex_app.fragments.PrivacyPolicyAgreement
 import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.models.LoginRequest
+import pt.ipt.arcanedex_app.data.models.User.LoginRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
+import pt.ipt.arcanedex_app.fragments.PrivacyPolicyAgreement
 import pt.ipt.arcanedex_app.viewmodel.AuthViewModel
 import java.util.Date
 
+/**
+ * Actividade principal que apresenta o ecrã de login e verifica as condições iniciais,
+ * como aceitação dos termos e validade do token de sessão.
+ */
 class MainActivity : AppCompatActivity() {
 
+    /**
+     * Campo de texto para o nome de utilizador.
+     */
     private lateinit var usernameText: EditText
+
+    /**
+     * Campo de texto para a palavra-passe.
+     */
     private lateinit var passwordText: EditText
+
+    /**
+     * ViewModel utilizado para gerir a autenticação do utilizador.
+     */
     private val authViewModel: AuthViewModel by viewModels()
+
+    /**
+     * BroadcastReceiver para monitorizar mudanças na conectividade de rede.
+     */
     private lateinit var networkReceiver: BroadcastReceiver
 
+    /**
+     * Método chamado quando a actividade é criada.
+     *
+     * @param savedInstanceState Estado guardado da instância anterior, se existir.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -76,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         usernameText = findViewById(R.id.usernameText)
         passwordText = findViewById(R.id.passwordText)
 
-        // Configura o link para registro
+        // Configura o link para registo
         val registerTextView = findViewById<TextView>(R.id.registerLink)
         registerTextView.setOnClickListener {
             val intent = Intent(this, Register::class.java)
@@ -89,32 +113,44 @@ class MainActivity : AppCompatActivity() {
             showAboutUsDialog()
         }
 
-        // Configura o receiver para monitorar conexão de internet
+        // Configura o receiver para monitorizar conexão de internet
         networkReceiver = object : BroadcastReceiver() {
+            /**
+             * Chamado quando há uma mudança na conectividade de rede.
+             */
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (!SharedPreferencesHelper.isInternetAvailable(context!!)) {
                     // Redireciona para OfflineActivity
                     val offlineIntent = Intent(this@MainActivity, OfflineActivity::class.java)
                     startActivity(offlineIntent)
-                    finish() // Fecha a atividade atual
+                    finish() // Fecha a actividade actual
                 }
             }
         }
     }
 
+    /**
+     * Regista o `networkReceiver` quando a actividade está visível.
+     */
     override fun onResume() {
         super.onResume()
-        // Registra o NetworkReceiver para monitorar mudanças na conectividade
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         registerReceiver(networkReceiver, filter)
     }
 
+    /**
+     * Remove o registo do `networkReceiver` quando a actividade não está visível.
+     */
     override fun onPause() {
         super.onPause()
-        // Remove o registro do receiver para evitar vazamentos de memória
         unregisterReceiver(networkReceiver)
     }
 
+    /**
+     * Método chamado quando o botão de login é clicado.
+     *
+     * @param view A vista que foi clicada.
+     */
     fun buttonClick(view: View?) {
         val username = usernameText.text.toString().trim()
         val password = passwordText.text.toString().trim()
@@ -154,6 +190,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Mostra o diálogo "Sobre Nós".
+     */
     private fun showAboutUsDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_about_us, null)
 
@@ -173,6 +212,11 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /**
+     * Limpa o estado de aceitação da política de privacidade.
+     *
+     * @param view A vista que foi clicada.
+     */
     fun clearPrivacy(view: View?) {
         SharedPreferencesHelper.setHasAcceptedTerms(this, false)
     }

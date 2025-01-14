@@ -24,19 +24,24 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.api.BackgroundImageRequest
 import pt.ipt.arcanedex_app.data.api.RetrofitClient
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
+/**
+ * Fragmento de detalhes que exibe informações de uma criatura específica.
+ * O fragmento permite visualizar detalhes como o nome, descrição, imagem e fundo da criatura.
+ * Além disso, o utilizador pode adicionar ou remover um fundo personalizado para a criatura.
+ */
 class DetailFragment : Fragment() {
 
     private val CAMERA_REQUEST_CODE = 100
@@ -47,6 +52,10 @@ class DetailFragment : Fragment() {
     private var loadingOperations = 0
     private lateinit var progressBar: ProgressBar
 
+    /**
+     * Cria a view para o fragmento.
+     * Inicializa o layout do fragmento de detalhes da criatura.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -54,6 +63,10 @@ class DetailFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_detail, container, false)
     }
 
+    /**
+     * Configura a interface do utilizador após a criação da view.
+     * Popula os campos com informações da criatura selecionada.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -73,22 +86,23 @@ class DetailFragment : Fragment() {
         val descriptionTextView = view.findViewById<TextView>(R.id.descriptionTextView)
         val imageView = view.findViewById<ImageView>(R.id.imageView)
 
-        // Populate UI
+        // Preenche a UI com dados da criatura
         titleTextView.text = cardItem.Name
         descriptionTextView.text = cardItem.Lore ?: "No description available"
 
+        // Carrega imagem da criatura
         cardItem.Img?.let { img ->
             Glide.with(requireContext())
                 .load(img)
                 .into(imageView)
         } ?: run {
-            imageView.setBackgroundResource(R.color.primary) // Default background
+            imageView.setBackgroundResource(R.color.primary) // Fundo padrão
         }
 
-        // Fetch and apply background image
+        // Busca e aplica a imagem de fundo
         fetchAndApplyBackground(cardItem.Id, backgroundView)
 
-        // Handle visibility of buttons
+        // Controla a visibilidade dos botões
         if (cardItem.isFavorite) {
             addBackground.visibility = View.VISIBLE
             removeBackground.visibility = View.VISIBLE
@@ -97,6 +111,7 @@ class DetailFragment : Fragment() {
             removeBackground.visibility = View.GONE
         }
 
+        // Configura o botão para adicionar fundo
         addBackground.setOnClickListener {
             if (hasCameraPermission()) {
                 openCamera()
@@ -105,6 +120,7 @@ class DetailFragment : Fragment() {
             }
         }
 
+        // Configura o botão para remover fundo
         removeBackground.setOnClickListener {
             val token = SharedPreferencesHelper.getToken(requireContext())
             if (token == null) return@setOnClickListener
@@ -117,6 +133,12 @@ class DetailFragment : Fragment() {
         }
     }
 
+    /**
+     * Aplica o fundo fornecido usando Glide.
+     *
+     * @param base64Image Imagem codificada em base64.
+     * @param imageView ImageView onde a imagem será aplicada.
+     */
     private fun applyBackgroundWithGlide(base64Image: String, imageView: ImageView) {
         val imageUrl = base64Image
         Glide.with(requireContext())
@@ -124,6 +146,48 @@ class DetailFragment : Fragment() {
             .into(imageView)
     }
 
+    /**
+     * Restaura o fundo de uma criatura favorita para o estado padrão.
+     *
+     * @param creatureId O ID da criatura cuja imagem de fundo será redefinida.
+     * @param token O token de autenticação do utilizador.
+     */
+    private fun resetBackgroundToDefault(creatureId: Int, token: String) {
+        backgroundView.setImageDrawable(null) // Remove a imagem de fundo atual
+        setLoading(true) // Ativa o estado de carregamento
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Faz uma chamada à API para redefinir o fundo
+                val response = RetrofitClient.instance.resetFavouriteCreatureBackground(
+                    creatureId = creatureId, token = "Bearer $token"
+                )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        // Mostra uma mensagem de sucesso ao utilizador
+                        Toast.makeText(
+                            requireContext(),
+                            "Fundo eliminado!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    setLoading(false) // Desativa o estado de carregamento
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    // Desativa o estado de carregamento mesmo em caso de erro
+                    setLoading(false)
+                }
+            }
+        }
+    }
+
+    /**
+     * Busca os detalhes de uma criatura e aplica a imagem de fundo.
+     *
+     * @param creatureId ID da criatura para buscar os detalhes.
+     * @param imageView ImageView onde a imagem de fundo será aplicada.
+     */
     private fun fetchAndApplyBackground(creatureId: Int, imageView: ImageView) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
@@ -153,44 +217,24 @@ class DetailFragment : Fragment() {
         }
     }
 
-    private fun resetBackgroundToDefault(creatureId: Int, token: String) {
-
-        backgroundView.setImageDrawable(null)
-        setLoading(true)
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitClient.instance.resetFavouriteCreatureBackground(
-                    creatureId = creatureId, token = "Bearer $token"
-                )
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Fundo eliminado!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    setLoading(false)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { setLoading(false) }
-            }
-        }
-    }
-
-    private fun setLoading(loading: Boolean) {
-        if (loading) {
-            loadingOperations++
+    /**
+     * Configura o estado de carregamento (visibilidade do ProgressBar).
+     *
+     * @param isLoading Define se o processo de carregamento está ativo ou não.
+     */
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
             progressBar.visibility = View.VISIBLE
         } else {
-            loadingOperations--
-            if (loadingOperations <= 0) {
-                loadingOperations = 0
-                progressBar.visibility = View.GONE
-            }
+            progressBar.visibility = View.GONE
         }
     }
 
+    /**
+     * Verifica se o utilizador tem permissão para usar a câmara.
+     *
+     * @return true se a permissão para usar a câmara foi concedida, caso contrário false.
+     */
     private fun hasCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             requireContext(),
@@ -198,6 +242,9 @@ class DetailFragment : Fragment() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Solicita permissão para usar a câmara.
+     */
     private fun requestCameraPermission() {
         ActivityCompat.requestPermissions(
             requireActivity(),
@@ -206,6 +253,10 @@ class DetailFragment : Fragment() {
         )
     }
 
+    /**
+     * Abre a câmara para tirar uma foto.
+     * A foto será salva em um arquivo temporário.
+     */
     private fun openCamera() {
         val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (cameraIntent.resolveActivity(requireActivity().packageManager) != null) {
@@ -224,6 +275,11 @@ class DetailFragment : Fragment() {
         }
     }
 
+    /**
+     * Cria um arquivo temporário para armazenar a foto tirada pela câmara.
+     *
+     * @return o arquivo de imagem temporário ou null se houver um erro na criação.
+     */
     private fun createImageFile(): File? {
         return try {
             val timestamp = System.currentTimeMillis().toString()
@@ -235,6 +291,10 @@ class DetailFragment : Fragment() {
         }
     }
 
+    /**
+     * Manipula o resultado da solicitação de permissão para usar a câmara.
+     * Se a permissão for concedida, a câmara será aberta.
+     */
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -254,6 +314,10 @@ class DetailFragment : Fragment() {
         }
     }
 
+    /**
+     * Manipula o resultado da atividade de captura de imagem.
+     * Quando uma imagem é tirada, ela é processada e enviada para a API.
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
@@ -263,7 +327,7 @@ class DetailFragment : Fragment() {
                 val format = Bitmap.CompressFormat.JPEG
                 val (base64Image, mimeType) = encodeImageToBase64(bitmap, format)
 
-                // Call the API with the encoded image
+                // Chama a API com a imagem codificada
                 sendImageToApi(base64Image, mimeType, backgroundView)
             } ?: run {
                 Toast.makeText(requireContext(), "Falha na captura de fotografia", Toast.LENGTH_SHORT)
@@ -272,6 +336,13 @@ class DetailFragment : Fragment() {
         }
     }
 
+    /**
+     * Codifica a imagem para o formato Base64.
+     *
+     * @param bitmap A imagem a ser codificada.
+     * @param format O formato de compressão da imagem.
+     * @return Um par contendo a imagem codificada em Base64 e o tipo MIME da imagem.
+     */
     private fun encodeImageToBase64(
         bitmap: Bitmap,
         format: Bitmap.CompressFormat
@@ -288,6 +359,13 @@ class DetailFragment : Fragment() {
         return Pair(base64Image, mimeType)
     }
 
+    /**
+     * Envia a imagem codificada para a API para atualizar o fundo da criatura.
+     *
+     * @param base64Image A imagem codificada em Base64.
+     * @param mimeType O tipo MIME da imagem.
+     * @param view O ImageView onde a nova imagem de fundo será exibida.
+     */
     private fun sendImageToApi(base64Image: String, mimeType: String, view: ImageView) {
         val cardItem = sharedCardItemViewModel.selectedCardItem
         val token = SharedPreferencesHelper.getToken(requireContext())

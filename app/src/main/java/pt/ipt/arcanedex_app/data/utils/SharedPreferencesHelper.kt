@@ -7,78 +7,78 @@ import android.net.NetworkCapabilities
 import com.auth0.android.jwt.JWT
 import java.util.Date
 
-// Singleton object to manage shared preferences
+// Singleton para gerir as preferências partilhadas
 object SharedPreferencesHelper {
 
-    // Name of the SharedPreferences file
+    // Nome do ficheiro de preferências partilhadas
     private const val PREFS_NAME = "arcanedex_prefs"
 
-    // Key for storing the token
+    // Chave para armazenar o token de autenticação
     private const val KEY_TOKEN = "authToken"
 
-    // Key for storing whether the user has accepted the terms
+    // Chave para armazenar se o utilizador aceitou os termos
     private const val KEY_HAS_ACCEPTED_TERMS = "hasAcceptedTerms"
 
     /**
-     * Retrieves the SharedPreferences instance for the app.
+     * Recupera a instância das preferências partilhadas para a aplicação.
      *
-     * @param context Context of the calling component.
-     * @return The SharedPreferences instance.
+     * @param context Contexto do componente que faz a chamada.
+     * @return A instância das preferências partilhadas.
      */
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
     /**
-     * Saves the authentication token to SharedPreferences.
+     * Guarda o token de autenticação nas preferências partilhadas.
      *
-     * @param context Context of the calling component.
-     * @param token The authentication token to save.
+     * @param context Contexto do componente que faz a chamada.
+     * @param token O token de autenticação a guardar.
      */
     fun saveToken(context: Context, token: String) {
         getSharedPreferences(context)
-            .edit() // Open SharedPreferences for editing
-            .putString(KEY_TOKEN, token) // Add the token
-            .apply() // Save changes asynchronously
+            .edit() // Abre as preferências para edição
+            .putString(KEY_TOKEN, token) // Adiciona o token
+            .apply() // Guarda as alterações de forma assíncrona
     }
 
     /**
-     * Retrieves the saved authentication token from SharedPreferences.
+     * Recupera o token de autenticação guardado nas preferências partilhadas.
      *
-     * @param context Context of the calling component.
-     * @return The saved token, or null if no token is found.
+     * @param context Contexto do componente que faz a chamada.
+     * @return O token guardado ou null se não houver token guardado.
      */
     fun getToken(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_TOKEN, null)
     }
 
     /**
-     * Clears the authentication token from SharedPreferences.
+     * Apaga o token de autenticação das preferências partilhadas.
      *
-     * @param context Context of the calling component.
+     * @param context Contexto do componente que faz a chamada.
      */
     fun clearToken(context: Context) {
         getSharedPreferences(context)
-            .edit() // Open SharedPreferences for editing
-            .remove(KEY_TOKEN) // Remove the token
-            .apply() // Save changes asynchronously
+            .edit() // Abre as preferências para edição
+            .remove(KEY_TOKEN) // Remove o token
+            .apply() // Guarda as alterações de forma assíncrona
     }
 
     /**
-     * Checks if the user has accepted the terms of service.
+     * Verifica se o utilizador aceitou os termos de serviço.
      *
-     * @param context Context of the calling component.
-     * @return True if the terms have been accepted, false otherwise.
+     * @param context Contexto do componente que faz a chamada.
+     * @return Verdadeiro se os termos foram aceites, falso caso contrário.
      */
     fun hasAcceptedTerms(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_HAS_ACCEPTED_TERMS, false)
     }
 
     /**
-     * Updates the value indicating whether the user has accepted the terms of service.
+     * Atualiza o valor indicando se o utilizador aceitou os termos de serviço.
      *
-     * @param context Context of the calling component.
-     * @param accepted Boolean value indicating if the terms have been accepted.
+     * @param context Contexto do componente que faz a chamada.
+     * @param accepted Valor booleano indicando se os termos foram aceites.
      */
     fun setHasAcceptedTerms(context: Context, accepted: Boolean) {
         getSharedPreferences(context)
@@ -87,6 +87,12 @@ object SharedPreferencesHelper {
             .apply()
     }
 
+    /**
+     * Verifica se a rede está disponível e se tem acesso à Internet.
+     *
+     * @param context Contexto da aplicação.
+     * @return Verdadeiro se a rede estiver disponível, falso caso contrário.
+     */
     fun isInternetAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
@@ -94,12 +100,24 @@ object SharedPreferencesHelper {
         return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
+    /**
+     * Verifica se a senha fornecida é válida. A senha deve ter pelo menos 8 caracteres e um carácter especial.
+     *
+     * @param password A senha a verificar.
+     * @return Verdadeiro se a senha for válida, falso caso contrário.
+     */
     fun isPasswordValid(password: String): Boolean {
-        // At least 8 characters and one special character
+        // Pelo menos 8 caracteres e um carácter especial
         val passwordPattern = Regex("^(?=.*[@#\$%^&+=!]).{8,}$")
         return passwordPattern.matches(password)
     }
 
+    /**
+     * Verifica se o utilizador tem o papel de "Admin" com base no token de autenticação.
+     *
+     * @param context Contexto da aplicação.
+     * @return Verdadeiro se o utilizador for um "Admin", falso caso contrário.
+     */
     fun isUserAdmin(context: Context): Boolean {
         val token = getToken(context) ?: return false
         val jwt = JWT(token)
@@ -107,11 +125,11 @@ object SharedPreferencesHelper {
         val isTokenValid = expiresAt != null && expiresAt.after(Date())
 
         if (isTokenValid) {
-            // Check if the user has an "admin" role
+            // Verifica se o utilizador tem o papel de "Admin"
             val role = jwt.getClaim("role").asString()
             return role == "Admin"
         } else {
-            // Clear the invalid token
+            // Apaga o token inválido
             clearToken(context)
             return false
         }

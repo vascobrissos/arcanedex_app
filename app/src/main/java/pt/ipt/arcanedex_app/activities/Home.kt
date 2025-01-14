@@ -12,12 +12,23 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
-import pt.ipt.arcanedex_app.utils.NetworkReceiver
+import pt.ipt.arcanedex_app.data.utils.NetworkReceiver
 
+/**
+ * Actividade principal da aplicação que gere a navegação e detecção de conectividade.
+ */
 class Home : AppCompatActivity() {
 
+    /**
+     * Receiver para monitorizar mudanças de conectividade de rede.
+     */
     private lateinit var networkReceiver: BroadcastReceiver
 
+    /**
+     * Inicializa a actividade.
+     *
+     * @param savedInstanceState Estado guardado da instância anterior, se existente.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -63,6 +74,11 @@ class Home : AppCompatActivity() {
 
         // Configura o NetworkReceiver
         networkReceiver = object : NetworkReceiver() {
+            /**
+             * Executado quando o estado da rede muda.
+             *
+             * @param isConnected Indica se há ligação à internet.
+             */
             override fun onNetworkChange(isConnected: Boolean) {
                 if (!isConnected) {
                     Toast.makeText(this@Home, "Sem ligação à internet", Toast.LENGTH_SHORT).show()
@@ -75,12 +91,18 @@ class Home : AppCompatActivity() {
         }
     }
 
+    /**
+     * Regista o `networkReceiver` quando a actividade está visível.
+     */
     override fun onResume() {
         super.onResume()
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         registerReceiver(networkReceiver, filter)
     }
 
+    /**
+     * Remove o registo do `networkReceiver` quando a actividade não está visível.
+     */
     override fun onPause() {
         super.onPause()
         unregisterReceiver(networkReceiver)

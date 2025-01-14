@@ -1,4 +1,4 @@
-package pt.ipt.arcanedex_app.data.models
+package pt.ipt.arcanedex_app.data.models.User
 
 data class UserProfile(
     val FirstName: String,

@@ -1,4 +1,4 @@
-package pt.ipt.arcanedex_app.data.models.creature
+package pt.ipt.arcanedex_app.data.models.Creature
 
 data class CreatureRequestAdmin(
     val Name: String,

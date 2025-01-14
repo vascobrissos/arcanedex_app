@@ -61,7 +61,7 @@
         </provider>
 
         <receiver
-            android:name=".utils.NetworkReceiver"
+            android:name=".data.utils.NetworkReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />

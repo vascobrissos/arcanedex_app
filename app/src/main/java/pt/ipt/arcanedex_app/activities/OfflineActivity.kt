@@ -10,77 +10,95 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import pt.ipt.arcanedex_app.CardAdapter
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.CardItem
 import pt.ipt.arcanedex_app.data.database.AppDatabase
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Timer
 import kotlin.concurrent.timerTask
 
+/**
+ * Atividade responsável por exibir os dados em modo offline.
+ * Permite ao utilizador visualizar os itens em cache, mesmo sem ligação à internet.
+ */
 class OfflineActivity : AppCompatActivity() {
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: CardAdapter
-    private lateinit var NoDataImage:ImageView
-    private lateinit var NoDataText:TextView
-    private val cardItems = mutableListOf<CardItem>()
-    private var timer: Timer? = null
-    private var isNavigatingToLogin = false // Evitar múltiplas transições para MainActivity
+    private lateinit var recyclerView: RecyclerView // RecyclerView para exibir os dados offline
+    private lateinit var adapter: CardAdapter // Adapter para gerir os itens na RecyclerView
+    private lateinit var NoDataImage: ImageView // Imagem exibida quando não há dados
+    private lateinit var NoDataText: TextView // Texto exibido quando não há dados
+    private val cardItems = mutableListOf<CardItem>() // Lista de itens para exibição
+    private var timer: Timer? = null // Timer para verificar conexão de internet periodicamente
+    private var isNavigatingToLogin = false // Evitar múltiplas transições para a atividade de login
 
+    /**
+     * Método chamado ao criar a atividade.
+     * Configura a RecyclerView e inicia a verificação de internet.
+     *
+     * @param savedInstanceState Estado salvo da atividade (se disponível).
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_offline)
-        NoDataImage = findViewById(R.id.no_data_image)
-        NoDataText = findViewById(R.id.noDataText)
-        NoDataText.visibility = View.VISIBLE
-        NoDataImage.visibility = View.VISIBLE
-        recyclerView = findViewById(R.id.recyclerview)
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
 
-        // Inicializar o adapter
+        NoDataImage = findViewById(R.id.no_data_image) // Inicializa o componente de imagem
+        NoDataText = findViewById(R.id.noDataText) // Inicializa o componente de texto
+        NoDataText.visibility = View.VISIBLE // Torna o texto visível inicialmente
+        NoDataImage.visibility = View.VISIBLE // Torna a imagem visível inicialmente
+        recyclerView = findViewById(R.id.recyclerview) // Inicializa a RecyclerView
+        recyclerView.layoutManager = GridLayoutManager(this, 2) // Define o layout em grelha
+
+        // Configuração do adapter
         adapter = CardAdapter(
             items = cardItems,
             onItemClick = { clickedItem ->
-                Log.d("OfflineActivity", "Clicked on: ${clickedItem.Name}")
+                Log.d(
+                    "OfflineActivity",
+                    "Clicked on: ${clickedItem.Name}"
+                ) // Regista o item clicado
             },
             onFavoriteToggle = {
-                Toast.makeText(this, "Não pode favoritar enquanto offline", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Não pode favoritar enquanto offline", Toast.LENGTH_SHORT)
+                    .show() // Mostra mensagem ao tentar favoritar offline
             },
-            showFavorites = false // Desativa as estrelas no modo offline
+            showFavorites = false // Desativa a exibição de favoritos no modo offline
         )
 
-        recyclerView.adapter = adapter
+        recyclerView.adapter = adapter // Associa o adapter à RecyclerView
 
-        // Carregar dados em cache
+        // Carrega os dados em cache
         loadCachedArcanes()
 
-        // Iniciar checagem de internet periódica
+        // Inicia a verificação periódica de ligação à internet
         startInternetCheck()
     }
 
+    /**
+     * Carrega os itens em cache da base de dados local e atualiza a interface.
+     */
     private fun loadCachedArcanes() {
         CoroutineScope(Dispatchers.IO).launch {
-            val db = AppDatabase.getDatabase(applicationContext)
-            val cachedArcanes = db.arcaneDao().getAllArcanes()
+            val db =
+                AppDatabase.getDatabase(applicationContext) // Obtém a instância da base de dados
+            val cachedArcanes = db.arcaneDao().getAllArcanes() // Busca os dados em cache
 
             if (cachedArcanes.isEmpty()) {
                 runOnUiThread {
-                    NoDataImage.visibility = View.VISIBLE
-                    NoDataText.visibility = View.VISIBLE
-                    recyclerView.visibility = View.GONE
+                    NoDataImage.visibility = View.VISIBLE // Mostra a imagem de "sem dados"
+                    NoDataText.visibility = View.VISIBLE // Mostra o texto de "sem dados"
+                    recyclerView.visibility = View.GONE // Oculta a RecyclerView
                 }
             } else {
                 runOnUiThread {
-                    NoDataImage.visibility = View.GONE
-                    NoDataText.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
+                    NoDataImage.visibility = View.GONE // Oculta a imagem de "sem dados"
+                    NoDataText.visibility = View.GONE // Oculta o texto de "sem dados"
+                    recyclerView.visibility = View.VISIBLE // Torna a RecyclerView visível
                 }
 
-                cardItems.clear()
+                cardItems.clear() // Limpa a lista atual de itens
                 cardItems.addAll(cachedArcanes.map { arcane ->
                     CardItem(
                         Id = arcane.id,
@@ -92,30 +110,37 @@ class OfflineActivity : AppCompatActivity() {
                 })
 
                 runOnUiThread {
-                    adapter.notifyDataSetChanged()
+                    adapter.notifyDataSetChanged() // Notifica o adapter sobre as mudanças nos dados
                 }
             }
         }
     }
 
-
+    /**
+     * Inicia a verificação periódica de ligação à internet.
+     * Redireciona o utilizador para a tela de login se a internet estiver disponível.
+     */
     private fun startInternetCheck() {
         timer = Timer()
         timer?.schedule(timerTask {
             if (!isNavigatingToLogin && SharedPreferencesHelper.isInternetAvailable(this@OfflineActivity)) {
                 runOnUiThread {
                     isNavigatingToLogin = true // Evita múltiplas navegações
-                    SharedPreferencesHelper.clearToken(this@OfflineActivity) // Limpa o token ao voltar para o login
+                    SharedPreferencesHelper.clearToken(this@OfflineActivity) // Limpa o token
                     val intent = Intent(this@OfflineActivity, MainActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                    startActivity(intent) // Inicia a atividade de login
+                    finish() // Termina a atividade atual
                 }
             }
         }, 0, 5000) // Verifica a cada 5 segundos
     }
 
+    /**
+     * Método chamado ao destruir a atividade.
+     * Cancela o timer para evitar memória vazada.
+     */
     override fun onDestroy() {
         super.onDestroy()
-        timer?.cancel() // Cancelar o timer ao destruir a activity
+        timer?.cancel() // Cancela o timer
     }
 }

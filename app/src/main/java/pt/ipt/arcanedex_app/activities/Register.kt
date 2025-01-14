@@ -8,68 +8,110 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import pt.ipt.arcanedex_app.data.models.RegisterRequest
-import pt.ipt.arcanedex_app.viewmodel.AuthViewModel
-import androidx.activity.viewModels
 import pt.ipt.arcanedex_app.R
+import pt.ipt.arcanedex_app.data.models.User.RegisterRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
+import pt.ipt.arcanedex_app.viewmodel.AuthViewModel
 
+/**
+ * Actividade de registo, onde os utilizadores podem criar uma nova conta.
+ */
 class Register : AppCompatActivity() {
 
+    /**
+     * Campo de texto para o primeiro nome.
+     */
     private lateinit var firstNameEditText: EditText
+
+    /**
+     * Campo de texto para o apelido.
+     */
     private lateinit var lastNameEditText: EditText
+
+    /**
+     * Campo de texto para o email.
+     */
     private lateinit var emailEditText: EditText
+
+    /**
+     * Campo de texto para o nome de utilizador.
+     */
     private lateinit var usernameEditText: EditText
+
+    /**
+     * Campo de texto para a palavra-passe.
+     */
     private lateinit var passwordEditText: EditText
+
+    /**
+     * Comutador para seleccionar o género.
+     */
     private lateinit var genderSwitch: Switch
+
+    /**
+     * Texto que mostra o género seleccionado.
+     */
     private lateinit var genderTextView: TextView
+
+    /**
+     * ViewModel utilizado para gerir a autenticação e registo.
+     */
     private val authViewModel: AuthViewModel by viewModels()
 
+    /**
+     * Método chamado quando a actividade é criada.
+     *
+     * @param savedInstanceState Estado guardado da instância anterior, se existir.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_register)
 
-        // Apply padding for system bars
+        // Aplica padding para as barras do sistema
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Initialize UI components
+        // Inicializa os componentes da interface do utilizador
         firstNameEditText = findViewById(R.id.firstNameText)
         lastNameEditText = findViewById(R.id.surnameText)
         emailEditText = findViewById(R.id.emailText)
         usernameEditText = findViewById(R.id.usernameText)
         passwordEditText = findViewById(R.id.passwordText)
         genderSwitch = findViewById(R.id.switch1)
-        genderTextView = findViewById(R.id.textView3) // Gender text view
+        genderTextView = findViewById(R.id.textView3)
         val registerButton = findViewById<Button>(R.id.button)
         val loginTextView = findViewById<TextView>(R.id.loginLink)
 
-        // Set initial gender text
+        // Define o texto inicial para o género
         genderTextView.text = if (genderSwitch.isChecked) "Masculino" else "Feminino"
 
-        // Handle gender toggle
+        // Configura o evento de alternância de género
         genderSwitch.setOnCheckedChangeListener { _, isChecked ->
             genderTextView.text = if (isChecked) "Masculino" else "Feminino"
         }
 
-        // Set click listener for Register button
+        // Configura o evento de clique para o botão de registo
         registerButton.setOnClickListener {
             performRegistration()
         }
 
-        // Navigate to Login activity when login link is clicked
+        // Navega para a actividade de login ao clicar no link de login
         loginTextView.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
     }
 
+    /**
+     * Executa o processo de registo.
+     */
     private fun performRegistration() {
         val firstName = firstNameEditText.text.toString().trim()
         val lastName = lastNameEditText.text.toString().trim()
@@ -78,7 +120,7 @@ class Register : AppCompatActivity() {
         val password = passwordEditText.text.toString().trim()
         val gender = if (genderSwitch.isChecked) "Masculino" else "Feminino"
 
-        // Validate inputs
+        // Valida os campos de entrada
         if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
             return
@@ -90,7 +132,6 @@ class Register : AppCompatActivity() {
                 "Password tem de conter 8 caracteres e um símbolo especial!",
                 Toast.LENGTH_SHORT
             ).show()
-
             return
         }
 
@@ -100,7 +141,7 @@ class Register : AppCompatActivity() {
             return
         }
 
-        // Create a RegisterRequest object
+        // Cria um objeto RegisterRequest
         val registerRequest = RegisterRequest(
             FirstName = firstName,
             LastName = lastName,
@@ -111,38 +152,34 @@ class Register : AppCompatActivity() {
             Role = "User"
         )
 
-        // Call ViewModel to perform the registration
+        // Chama o ViewModel para realizar o registo
         authViewModel.registerUser(registerRequest) { success, errorMessage ->
             if (success) {
                 Toast.makeText(this, "Registado!", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this, MainActivity::class.java))
-                finish() // Close the Register activity
+                finish() // Fecha a actividade de registo
             } else {
-                // Translate specific API errors
                 val translatedMessage = when {
-                    errorMessage?.contains(
-                        "Email already in use",
-                        ignoreCase = true
-                    ) == true -> "Email já existe"
+                    errorMessage?.contains("Email already in use", ignoreCase = true) == true ->
+                        "Email já existe"
 
-                    errorMessage?.contains(
-                        "Username already in use",
-                        ignoreCase = true
-                    ) == true -> "Utilizador já existe"
-
+                    errorMessage?.contains("Username already in use", ignoreCase = true) == true ->
+                        "Utilizador já existe"
                     else -> "Registo falhou: $errorMessage"
                 }
 
-                // Display translated error message
                 Toast.makeText(this, translatedMessage, Toast.LENGTH_LONG).show()
             }
         }
     }
 
-
-    // Email validation function
+    /**
+     * Valida o formato do email.
+     *
+     * @param email O email a ser validado.
+     * @return `true` se o email for válido, caso contrário `false`.
+     */
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
-
 }

@@ -1,7 +1,6 @@
 package pt.ipt.arcanedex_app.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,25 +15,26 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Query
-import pt.ipt.arcanedex_app.CardAdapter
-import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.CardItem
-import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.database.AppDatabase
-import pt.ipt.arcanedex_app.data.models.ArcaneEntity
-import pt.ipt.arcanedex_app.data.models.FavoriteRequest
-import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
-import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import pt.ipt.arcanedex_app.CardAdapter
+import pt.ipt.arcanedex_app.R
+import pt.ipt.arcanedex_app.data.CardItem
+import pt.ipt.arcanedex_app.data.api.RetrofitClient
+import pt.ipt.arcanedex_app.data.database.AppDatabase
+import pt.ipt.arcanedex_app.data.models.Creature.ArcaneEntity
+import pt.ipt.arcanedex_app.data.models.Creature.FavoriteRequest
+import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
+import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
 
+/**
+ * Fragmento responsável por apresentar a listagem de arcanes.
+ */
 class HomeFragment : Fragment() {
-
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private lateinit var loadMoreButton: Button
@@ -43,11 +43,19 @@ class HomeFragment : Fragment() {
     private var searchJob: Job? = null
     private var name = ""
     private val cardItems = mutableListOf<CardItem>()
-    private var currentPage = 1 // Current page for pagination
+    private var currentPage = 1 // Página atual para paginação
     private var totalcountNotFavorites = 0
-    private var isLoading = false // To prevent multiple simultaneous requests
+    private var isLoading = false // Para evitar múltiplas requisições simultâneas
     private var isOfflineDataFetched = false
 
+    /**
+     * Infla o layout do fragmento e inicializa as views principais.
+     *
+     * @param inflater O inflador de layout para criar a interface.
+     * @param container O contêiner pai, se existir.
+     * @param savedInstanceState O estado salvo, caso haja.
+     * @return A vista inflada.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -55,14 +63,22 @@ class HomeFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
+    /**
+     * Método chamado após a criação da view do fragmento, onde a lógica de inicialização é definida.
+     *
+     * @param view A vista inflada no método onCreateView.
+     * @param savedInstanceState O estado salvo, caso haja.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicialização das views
         recyclerView = view.findViewById(R.id.recyclerview)
         searchView = view.findViewById(R.id.search_bar)
         loadMoreButton = view.findViewById(R.id.load_more_button)
         loadingSpinner = view.findViewById(R.id.loading_spinner)
 
+        // Inicializa o layout e o adaptador
         recyclerView.visibility = View.GONE
         loadMoreButton.visibility = View.GONE
         loadingSpinner.visibility = View.VISIBLE
@@ -74,24 +90,28 @@ class HomeFragment : Fragment() {
         adapter = CardAdapter(
             items = cardItems,
             onItemClick = { clickedItem ->
+                // Navega para o detalhe do card
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
                 findNavController().navigate(R.id.action_homeFragment_to_detailFragment)
                 sharedCardItemViewModel.selectedCardItem = clickedItem
-
             },
             onFavoriteToggle = { favoriteItem ->
+                // Alterna o estado de favorito do item
                 toggleFavorite(favoriteItem.Id)
             },
             showFavorites = true
         )
 
+        // Carrega dados offline uma única vez
         if (!isOfflineDataFetched) {
             saveDataOfflineOnce()
         }
+
         recyclerView.adapter = adapter
 
+        // Manipula o foco de pesquisa
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 loadMoreButton.visibility = View.GONE
@@ -102,18 +122,22 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // Carrega mais dados quando o botão "Carregar mais" é pressionado
         loadMoreButton.setOnClickListener {
             loadMoreData(name)
         }
 
+        // Configura o comportamento da pesquisa
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
+                // Realiza a busca ao submeter a consulta
                 performSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                searchJob?.cancel() // Cancela a pesquisa anterior, se estiver em andamento
+                // Cancela a pesquisa anterior, se estiver em andamento
+                searchJob?.cancel()
                 searchJob = CoroutineScope(Dispatchers.Main).launch {
                     delay(300) // Atraso de 300ms
                     performSearch(newText)
@@ -122,32 +146,41 @@ class HomeFragment : Fragment() {
             }
         })
 
-
-        // Load the first page of data
+        // Carrega a primeira página de dados
         if (cardItems.isEmpty()) {
             loadMoreData(name)
         }
     }
 
-    private fun loadMoreData(name:String) {
-        if (isLoading) return // Prevent simultaneous requests
+    /**
+     * Carrega mais dados da API com base no nome fornecido e implementa a lógica de paginação.
+     *
+     * @param name Nome ou filtro para a pesquisa.
+     */
+    private fun loadMoreData(name: String) {
+        if (isLoading) return // Previne múltiplas solicitações simultâneas
         isLoading = true
 
-        loadingSpinner.visibility = View.VISIBLE
-        recyclerView.visibility = View.GONE
-        loadMoreButton.visibility = View.GONE
+        loadingSpinner.visibility = View.VISIBLE // Mostra o spinner de carregamento
+        recyclerView.visibility = View.GONE // Oculta o RecyclerView enquanto carrega
+        loadMoreButton.visibility = View.GONE // Oculta o botão de carregar mais
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Utilizador sem sessão iniciada!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     isLoading = false
                     return@launch
                 }
 
+                // Chamada à API para obter criaturas
                 val response = RetrofitClient.instance.getAllCreatures(
                     token = "Bearer $token",
                     page = currentPage,
@@ -168,25 +201,26 @@ class HomeFragment : Fragment() {
                         )
                     }
 
+                    // Adiciona os novos itens ao RecyclerView
                     cardItems.addAll(newCardItems)
                     adapter.notifyDataSetChanged()
 
-
-
-                    currentPage++
+                    currentPage++ // Incrementa a página atual
                     isLoading = false
 
-                    loadingSpinner.visibility = View.GONE
+                    loadingSpinner.visibility = View.GONE // Esconde o spinner de carregamento
 
                     if (cardItems.isEmpty()) {
+                        // Mostra mensagens de "Sem dados" se não houver itens
                         view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
                         view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
                     } else {
-                        recyclerView.visibility = View.VISIBLE
+                        recyclerView.visibility = View.VISIBLE // Mostra o RecyclerView
                         view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
                         view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                     }
 
+                    // Mostra ou oculta o botão "Carregar mais" com base no número de itens carregados
                     loadMoreButton.visibility =
                         if (cardItems.size >= totalcountNotFavorites) View.GONE else View.VISIBLE
                 }
@@ -195,16 +229,22 @@ class HomeFragment : Fragment() {
                     e.printStackTrace()
                     Toast.makeText(
                         requireContext(),
-                        "Error: ${e.localizedMessage}",
+                        "Erro: ${e.localizedMessage}",
                         Toast.LENGTH_LONG
                     ).show()
                     isLoading = false
-                    loadingSpinner.visibility = View.GONE
+                    loadingSpinner.visibility =
+                        View.GONE // Esconde o spinner de carregamento em caso de erro
                 }
             }
         }
     }
 
+    /**
+     * Alterna o estado de favorito para uma criatura, adicionando-a ou removendo-a da lista de favoritos.
+     *
+     * @param creatureId O ID da criatura a ser adicionada ou removida dos favoritos.
+     */
     private fun toggleFavorite(creatureId: Int) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
@@ -221,7 +261,7 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         Toast.makeText(requireContext(), "Favoritos Atualizado!", Toast.LENGTH_SHORT).show()
-                        refreshData() // Refresh non-favorites after toggling
+                        refreshData() // Atualiza a lista de criaturas não favoritas após alternar o estado.
                     } else {
                         Toast.makeText(
                             requireContext(),
@@ -234,7 +274,7 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         requireContext(),
-                        "Error: ${e.localizedMessage}",
+                        "Erro: ${e.localizedMessage}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -242,12 +282,21 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Atualiza os dados, reiniciando a página atual e recarregando as criaturas.
+     */
     private fun refreshData() {
         currentPage = 1
         cardItems.clear()
         loadMoreData(name)
     }
 
+    /**
+     * Realiza uma pesquisa de criaturas com base na consulta fornecida.
+     * Caso a consulta esteja vazia, exibe todos os dados novamente.
+     *
+     * @param query O termo de pesquisa a ser utilizado.
+     */
     private fun performSearch(query: String?) {
         if (query.isNullOrEmpty()) {
             view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
@@ -314,7 +363,7 @@ class HomeFragment : Fragment() {
                     e.printStackTrace()
                     Toast.makeText(
                         requireContext(),
-                        "Error: ${e.localizedMessage}",
+                        "Erro: ${e.localizedMessage}",
                         Toast.LENGTH_LONG
                     ).show()
                     view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
@@ -325,6 +374,12 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Salva os dados de criaturas offline pela primeira vez.
+     * Faz uma requisição para obter dados e os salva localmente.
+     *
+     * Caso os dados já tenham sido obtidos, uma mensagem é exibida.
+     */
     private fun saveDataOfflineOnce() {
         if (isOfflineDataFetched) {
             Toast.makeText(requireContext(), "Data para offline já foi obtida", Toast.LENGTH_SHORT).show()
@@ -349,7 +404,7 @@ class HomeFragment : Fragment() {
                     limit = 10, // Ajuste conforme necessário
                     name = "",
                     onlyFavoriteArcanes = false,
-                    toSaveOffline = true // Garantir que é para salvar offline
+                    toSaveOffline = true // Garantir que é para guardar offline
                 )
 
                 val newCardItems = response.data.map { creature ->
@@ -362,7 +417,7 @@ class HomeFragment : Fragment() {
                     )
                 }
 
-                // Salvar na cache usando Room
+                // Guardar na cache usando Room
                 saveToCache(newCardItems)
 
                 withContext(Dispatchers.Main) {
@@ -374,7 +429,7 @@ class HomeFragment : Fragment() {
                     e.printStackTrace()
                     Toast.makeText(
                         requireContext(),
-                        "Error: ${e.localizedMessage}",
+                        "Erro: ${e.localizedMessage}",
                         Toast.LENGTH_LONG
                     ).show()
                     loadingSpinner.visibility = View.GONE
@@ -383,8 +438,13 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Salva a lista de itens de criaturas no BD local (Room).
+     *
+     * @param cardItems Lista de itens de criaturas a serem armazenados na BD.
+     */
     private fun saveToCache(cardItems: List<CardItem>) {
-        val db = AppDatabase.getDatabase(requireContext()) // Obtenha a instância do banco de dados
+        val db = AppDatabase.getDatabase(requireContext()) // Obtenha a instância da BD
         val entities = cardItems.map { item ->
             ArcaneEntity(
                 id = item.Id,
@@ -395,9 +455,7 @@ class HomeFragment : Fragment() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            db.arcaneDao().insertAll(entities) // Salvar os dados no banco de dados
+            db.arcaneDao().insertAll(entities) // Guardar os dados na BD
         }
     }
-
-
 }
