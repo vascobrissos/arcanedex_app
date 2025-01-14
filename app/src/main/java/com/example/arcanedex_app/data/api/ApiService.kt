@@ -13,6 +13,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -57,4 +58,30 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") creatureId: Int
     ): Response<Unit>
+
+    @Headers("Content-Type: application/json")
+    @PUT("creatures/favourites/{id}/background")
+    suspend fun changeFavouriteCreatureBackground(
+        @Header("Authorization") token: String,
+        @Path("id") creatureId: Int,
+        @Body request: BackgroundImageRequest
+    ): Response<Unit>
+
+    @PUT("/creatures/favourites/{id}/background/default")
+    suspend fun resetFavouriteCreatureBackground(
+        @Path("id") creatureId: Int,
+        @Header("Authorization") token: String
+    ): Response<Void>
+
+    @GET("creatures/{id}")
+    suspend fun getCreatureDetails(
+        @Path("id") creatureId: Int,
+        @Header("Authorization") token: String
+    ): Response<CreatureDetailsResponse>
 }
+
+data class BackgroundImageRequest(val BackgroundImg: String)
+
+data class CreatureDetailsResponse(
+    val BackgroundImg: String?
+)

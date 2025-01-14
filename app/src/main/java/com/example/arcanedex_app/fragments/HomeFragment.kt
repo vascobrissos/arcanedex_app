@@ -10,6 +10,7 @@ import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +23,7 @@ import com.example.arcanedex_app.data.database.AppDatabase
 import com.example.arcanedex_app.data.models.ArcaneEntity
 import com.example.arcanedex_app.data.models.FavoriteRequest
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
+import com.example.arcanedex_app.viewmodel.SharedCardItemViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,20 +67,24 @@ class HomeFragment : Fragment() {
 
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
+        val sharedCardItemViewModel: SharedCardItemViewModel by activityViewModels()
+
         adapter = CardAdapter(
             items = cardItems,
             onItemClick = { clickedItem ->
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
-                findNavController().navigate(R.id.action_homeFragment_to_detailFragment, bundle)
+                findNavController().navigate(R.id.action_homeFragment_to_detailFragment)
+                sharedCardItemViewModel.selectedCardItem = clickedItem
+
             },
             onFavoriteToggle = { favoriteItem ->
                 toggleFavorite(favoriteItem.Id)
             },
             showFavorites = true
         )
-// Opcional: Buscar automaticamente na primeira vez
+
         if (!isOfflineDataFetched) {
             saveDataOfflineOnce()
         }

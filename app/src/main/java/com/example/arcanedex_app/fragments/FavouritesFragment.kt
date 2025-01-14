@@ -10,6 +10,7 @@ import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +19,7 @@ import com.example.arcanedex_app.R
 import com.example.arcanedex_app.data.CardItem
 import com.example.arcanedex_app.data.api.RetrofitClient
 import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
+import com.example.arcanedex_app.viewmodel.SharedCardItemViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -63,13 +65,17 @@ class FavouritesFragment : Fragment() {
             loadFavourites(name)
         }
 
+        val sharedCardItemViewModel: SharedCardItemViewModel by activityViewModels()
+
         adapter = CardAdapter(
             items = cardItems,
             onItemClick = { clickedItem ->
                 val bundle = Bundle().apply {
                     putParcelable("cardItem", clickedItem)
                 }
-                findNavController().navigate(R.id.action_favouritesFragment_to_detailFragment, bundle)
+                findNavController().navigate(R.id.action_favouritesFragment_to_detailFragment)
+                sharedCardItemViewModel.selectedCardItem = clickedItem
+
             },
             onFavoriteToggle = { favoriteItem ->
                 removeFavorite(favoriteItem.Id)
@@ -85,7 +91,8 @@ class FavouritesFragment : Fragment() {
                 loadMoreButton.visibility = View.GONE
             } else {
                 if (searchView.query.isNullOrEmpty()) {
-                    loadMoreButton.visibility = View.VISIBLE // Mostra o botão somente se a busca estiver vazia
+                    loadMoreButton.visibility =
+                        View.VISIBLE // Mostra o botão somente se a busca estiver vazia
                 }
             }
         }
@@ -114,7 +121,6 @@ class FavouritesFragment : Fragment() {
     }
 
 
-
     private fun loadFavourites(name: String) {
         if (isLoading) return // Prevent simultaneous requests
         isLoading = true
@@ -128,7 +134,8 @@ class FavouritesFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                            .show()
                     }
                     isLoading = false
                     return@launch
@@ -211,7 +218,8 @@ class FavouritesFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                            .show()
                     }
                     return@launch
                 }
