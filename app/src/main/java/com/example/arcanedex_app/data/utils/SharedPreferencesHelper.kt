@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.auth0.android.jwt.JWT
+import java.util.Date
 
 // Singleton object to manage shared preferences
 object SharedPreferencesHelper {
@@ -96,6 +98,23 @@ object SharedPreferencesHelper {
         // At least 8 characters and one special character
         val passwordPattern = Regex("^(?=.*[@#\$%^&+=!]).{8,}$")
         return passwordPattern.matches(password)
+    }
+
+    fun isUserAdmin(context: Context): Boolean {
+        val token = getToken(context) ?: return false
+        val jwt = JWT(token)
+        val expiresAt = jwt.expiresAt
+        val isTokenValid = expiresAt != null && expiresAt.after(Date())
+
+        if (isTokenValid) {
+            // Check if the user has an "admin" role
+            val role = jwt.getClaim("role").asString()
+            return role == "Admin"
+        } else {
+            // Clear the invalid token
+            clearToken(context)
+            return false
+        }
     }
 
 }

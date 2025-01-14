@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.arcanedex_app.R
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class Home : AppCompatActivity() {
@@ -17,9 +18,12 @@ class Home : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragments) as NavHostFragment
         val navController = navHostFragment.navController
+        val isAdmin = SharedPreferencesHelper.isUserAdmin(this) // Implementar método para verificar
 
         // Configure o BottomNavigationView
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        val menu = bottomNavigationView.menu
+        menu.findItem(R.id.adminFragment).isVisible = isAdmin
         bottomNavigationView.setupWithNavController(navController)
 
         // Adicione listener para redefinir a pilha de navegação
@@ -38,6 +42,11 @@ class Home : AppCompatActivity() {
                 R.id.profileFragment -> {
                     navController.popBackStack(R.id.profileFragment, false)
                     navController.navigate(R.id.profileFragment)
+                    true
+                }
+                R.id.adminFragment -> {
+                    navController.popBackStack(R.id.adminFragment, false)
+                    navController.navigate(R.id.adminFragment)
                     true
                 }
                 else -> false
