@@ -73,6 +73,15 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<Void>
 
+    @GET("creatures/{id}")
+    suspend fun getCreatureDetails(
+        @Path("id") creatureId: Int,
+        @Header("Authorization") token: String
+    ): Response<CreatureDetailsResponse>
 }
 
 data class BackgroundImageRequest(val BackgroundImg: String)
+
+data class CreatureDetailsResponse(
+    val BackgroundImg: String?
+)
