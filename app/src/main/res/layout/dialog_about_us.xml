@@ -79,7 +79,7 @@
         android:id="@+id/courseInfoTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Disciplina: Desenvolvimento de Aplicações Móveis\nCurso: Licenciatura em Engenharia Informática"
+        android:text="Disciplina: Desenvolvimento de Aplicações Móveis\nCurso: Licenciatura em Engenharia Informática 2024/2025"
         android:textSize="16sp"
         android:textColor="@color/black"
         android:gravity="center"
