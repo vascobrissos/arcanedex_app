@@ -60,7 +60,7 @@ class OfflineActivity : AppCompatActivity() {
             val cachedArcanes = db.arcaneDao().getAllArcanes() // Método para buscar todos os dados
 
             if (cachedArcanes.isEmpty()) {
-                Log.d("OfflineActivity", "No data found in the database.")
+                Log.d("OfflineActivity", "Sem dados para mostrar")
             } else {
                 Log.d("OfflineActivity", "Loaded ${cachedArcanes.size} items from cache.")
             }

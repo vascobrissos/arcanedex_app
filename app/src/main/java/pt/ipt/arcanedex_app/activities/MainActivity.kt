@@ -135,10 +135,7 @@ class MainActivity : AppCompatActivity() {
             if (token != null) {
                 try {
                     val jwt = JWT(token)
-                    val userId = jwt.getClaim("id").asInt()
                     val role = jwt.getClaim("role").asString()
-
-                    Toast.makeText(this, "Sessão Iniciada! ID: $userId, Role: $role", Toast.LENGTH_SHORT).show()
                     SharedPreferencesHelper.saveToken(this, token)
 
                     usernameText.setText("")
