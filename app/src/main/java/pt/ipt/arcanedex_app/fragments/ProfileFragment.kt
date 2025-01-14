@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.models.User.UserProfileRequest
+import pt.ipt.arcanedex_app.data.models.user.UserProfileRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import pt.ipt.arcanedex_app.viewmodel.ProfileViewModel
 

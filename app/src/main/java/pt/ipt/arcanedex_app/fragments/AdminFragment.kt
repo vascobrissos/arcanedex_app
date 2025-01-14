@@ -33,7 +33,7 @@ import pt.ipt.arcanedex_app.Arcane
 import pt.ipt.arcanedex_app.ArcaneAdapter
 import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.models.Creature.CreatureRequestAdmin
+import pt.ipt.arcanedex_app.data.models.creature.CreatureRequestAdmin
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import java.io.ByteArrayOutputStream
 

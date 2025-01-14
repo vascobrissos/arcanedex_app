@@ -21,7 +21,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.auth0.android.jwt.JWT
 import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.models.User.LoginRequest
+import pt.ipt.arcanedex_app.data.models.user.LoginRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import pt.ipt.arcanedex_app.fragments.PrivacyPolicyAgreement
 import pt.ipt.arcanedex_app.viewmodel.AuthViewModel

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.models.User.LoginRequest
-import pt.ipt.arcanedex_app.data.models.User.RegisterRequest
+import pt.ipt.arcanedex_app.data.models.user.LoginRequest
+import pt.ipt.arcanedex_app.data.models.user.RegisterRequest
 import retrofit2.HttpException
 
 /**

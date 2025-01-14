@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import pt.ipt.arcanedex_app.data.models.Creature.ArcaneEntity
+import pt.ipt.arcanedex_app.data.models.creature.ArcaneEntity
 import pt.ipt.arcanedex_app.data.utils.ArcaneDao
 
 /**

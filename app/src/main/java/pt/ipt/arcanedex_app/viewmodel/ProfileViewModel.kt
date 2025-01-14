@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import pt.ipt.arcanedex_app.data.api.RetrofitClient
-import pt.ipt.arcanedex_app.data.models.User.UserProfile
-import pt.ipt.arcanedex_app.data.models.User.UserProfileRequest
-import pt.ipt.arcanedex_app.data.models.User.UserProfileResponse
+import pt.ipt.arcanedex_app.data.models.user.UserProfile
+import pt.ipt.arcanedex_app.data.models.user.UserProfileRequest
+import pt.ipt.arcanedex_app.data.models.user.UserProfileResponse
 
 /**
  * ViewModel responsável pela gestão do perfil do utilizador.

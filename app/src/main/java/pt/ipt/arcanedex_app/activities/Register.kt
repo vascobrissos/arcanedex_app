@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import pt.ipt.arcanedex_app.R
-import pt.ipt.arcanedex_app.data.models.User.RegisterRequest
+import pt.ipt.arcanedex_app.data.models.user.RegisterRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import pt.ipt.arcanedex_app.viewmodel.AuthViewModel
 

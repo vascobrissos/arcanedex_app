@@ -3,16 +3,16 @@ package pt.ipt.arcanedex_app.data.api
 /**
  * Interface que define os endpoints da API e os seus respetivos métodos.
  */
-import pt.ipt.arcanedex_app.data.models.Creature.CreatureResponse
-import pt.ipt.arcanedex_app.data.models.Creature.FavoriteRequest
-import pt.ipt.arcanedex_app.data.models.User.LoginRequest
-import pt.ipt.arcanedex_app.data.models.User.LoginResponse
-import pt.ipt.arcanedex_app.data.models.User.RegisterRequest
-import pt.ipt.arcanedex_app.data.models.User.UserProfile
-import pt.ipt.arcanedex_app.data.models.User.UserProfileRequest
-import pt.ipt.arcanedex_app.data.models.User.UserProfileResponse
-import pt.ipt.arcanedex_app.data.models.Creature.CreatureRequestAdmin
-import pt.ipt.arcanedex_app.data.models.Creature.CreatureResponseAdmin
+import pt.ipt.arcanedex_app.data.models.creature.CreatureResponse
+import pt.ipt.arcanedex_app.data.models.creature.FavoriteRequest
+import pt.ipt.arcanedex_app.data.models.user.LoginRequest
+import pt.ipt.arcanedex_app.data.models.user.LoginResponse
+import pt.ipt.arcanedex_app.data.models.user.RegisterRequest
+import pt.ipt.arcanedex_app.data.models.user.UserProfile
+import pt.ipt.arcanedex_app.data.models.user.UserProfileRequest
+import pt.ipt.arcanedex_app.data.models.user.UserProfileResponse
+import pt.ipt.arcanedex_app.data.models.creature.CreatureRequestAdmin
+import pt.ipt.arcanedex_app.data.models.creature.CreatureResponseAdmin
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

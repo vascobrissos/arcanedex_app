@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import pt.ipt.arcanedex_app.data.models.Creature.ArcaneEntity
+import pt.ipt.arcanedex_app.data.models.creature.ArcaneEntity
 
 /**
  * Interface DAO (Data Access Object) para interagir com a tabela `arcanes` na base de dados.

@@ -135,4 +135,22 @@ object SharedPreferencesHelper {
         }
     }
 
+    /**
+     * Verifica se o token de autenticação é válido.
+     * Caso o token tenha expirado ou seja inválido, o mesmo será limpo.
+     *
+     * @param context Contexto da aplicação.
+     * @return Verdadeiro se o token for válido, falso caso contrário.
+     */
+    fun checkTokenValidity(context: Context): Boolean {
+        val token = getToken(context) ?: return false
+        val jwt = JWT(token)
+        val expiresAt = jwt.expiresAt
+        return if (expiresAt != null && expiresAt.after(Date())) {
+            true // Token válido
+        } else {
+            clearToken(context) // Limpa o token inválido
+            false
+        }
+    }
 }

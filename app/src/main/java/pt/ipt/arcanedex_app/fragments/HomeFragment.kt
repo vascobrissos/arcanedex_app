@@ -26,8 +26,8 @@ import pt.ipt.arcanedex_app.R
 import pt.ipt.arcanedex_app.data.CardItem
 import pt.ipt.arcanedex_app.data.api.RetrofitClient
 import pt.ipt.arcanedex_app.data.database.AppDatabase
-import pt.ipt.arcanedex_app.data.models.Creature.ArcaneEntity
-import pt.ipt.arcanedex_app.data.models.Creature.FavoriteRequest
+import pt.ipt.arcanedex_app.data.models.creature.ArcaneEntity
+import pt.ipt.arcanedex_app.data.models.creature.FavoriteRequest
 import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import pt.ipt.arcanedex_app.viewmodel.SharedCardItemViewModel
 
