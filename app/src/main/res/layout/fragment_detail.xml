@@ -24,7 +24,7 @@
             android:id="@+id/backgroundView"
             android:layout_width="0dp"
             android:layout_height="200dp"
-            android:scaleType="centerInside"
+            android:scaleType="center"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
