@@ -101,6 +101,11 @@ interface ApiService {
         @Body creature: CreatureRequestAdmin,
         @Header("Authorization") token: String
     ): Response<Void>
+
+    @DELETE("users/deleteAccount")
+    suspend fun deleteUserAccount(
+        @Header("Authorization") token: String
+    ): Response<Unit>
 }
 
 data class BackgroundImageRequest(val BackgroundImg: String)

@@ -94,14 +94,47 @@
             app:layout_constraintTop_toTopOf="@+id/aboutUs"
             app:tint="@color/primary" />
 
+        <!-- Eliminar Conta -->
+
+        <TextView
+            android:id="@+id/deleteAccountTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:paddingVertical="8dp"
+            android:text="Eliminar conta"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/aboutUs" />
+
+        <ImageView
+            android:id="@+id/deleteAccountArrow"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="Arrow Icon"
+            android:src="@drawable/baseline_arrow_forward_ios_24"
+            app:layout_constraintEnd_toEndOf="@+id/deleteAccountTextView"
+            app:layout_constraintTop_toTopOf="@+id/deleteAccountTextView"
+            app:tint="@color/primary" />
+
         <View
-            android:id="@+id/view"
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:background="@color/primary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/aboutUs" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/deleteAccountTextView" />
 
         <!-- Botão de Logout -->
         <Button
@@ -114,7 +147,7 @@
             android:backgroundTint="@color/primary"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/aboutUs" />
+            app:layout_constraintTop_toBottomOf="@id/deleteAccountTextView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
