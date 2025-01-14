@@ -67,12 +67,12 @@ interface ApiService {
         @Body request: BackgroundImageRequest
     ): Response<Unit>
 
-    // Remove the background image for a favorite creature
-    @DELETE("creatures/favourites/{id}/background")
-    suspend fun removeFavouriteCreatureBackground(
-        @Header("Authorization") token: String,
-        @Path("id") id: Int
-    ): Response<Unit>
+    @PUT("/creatures/favourites/{id}/background/default")
+    suspend fun resetFavouriteCreatureBackground(
+        @Path("id") creatureId: Int,
+        @Header("Authorization") token: String
+    ): Response<Void>
+
 }
 
 data class BackgroundImageRequest(val BackgroundImg: String)

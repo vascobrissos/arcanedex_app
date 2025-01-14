@@ -2,6 +2,7 @@ package com.example.arcanedex_app.fragments
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -31,11 +32,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONException
-import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -85,6 +81,15 @@ class DetailFragment : Fragment() {
             imageView.setBackgroundResource(R.color.primary) // Default background
         }
 
+        // Show buttons only if the card is marked as favorite
+        if (cardItem.isFavorite) { // Check if favorite is true
+            addBackground.visibility = View.VISIBLE
+            removeBackground.visibility = View.VISIBLE
+        } else {
+            addBackground.visibility = View.GONE
+            removeBackground.visibility = View.GONE
+        }
+
         addBackground.setOnClickListener {
             if (hasCameraPermission()) {
                 openCamera()
@@ -94,8 +99,23 @@ class DetailFragment : Fragment() {
         }
 
         removeBackground.setOnClickListener {
-            // Handle background removal
+            val cardItem = sharedCardItemViewModel.selectedCardItem
+            val token = SharedPreferencesHelper.getToken(requireContext())
+
+            if (cardItem == null || token == null) {
+                Toast.makeText(requireContext(), "Missing data for API call", Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            // Confirm removal
+            AlertDialog.Builder(requireContext()).setTitle("Remove Background")
+                .setMessage("Are you sure you want to remove the background?")
+                .setPositiveButton("Yes") { _, _ ->
+                    resetBackgroundToDefault(cardItem.Id, token)
+                }.setNegativeButton("No", null).show()
         }
+
     }
 
     private fun hasCameraPermission(): Boolean {
@@ -245,6 +265,48 @@ class DetailFragment : Fragment() {
                         requireContext(),
                         "Falha na requisição: ${e.localizedMessage}",
                         Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun resetBackgroundToDefault(creatureId: Int, token: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.resetFavouriteCreatureBackground(
+                    creatureId = creatureId, token = "Bearer $token"
+                )
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Background reset to default successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        /*
+                        // Reset the UI image to a default placeholder
+                        view?.findViewById<ImageView>(R.id.imageView)
+                            ?.setImageResource(R.drawable.error_image)*/
+
+
+                    } else {
+                        val errorMessage = response.errorBody()?.string() ?: "Unknown error"
+                        Log.e("API Error", errorMessage)
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to reset background: $errorMessage",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("API Failure", e.message ?: "Unknown error")
+                    Toast.makeText(
+                        requireContext(), "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT
                     ).show()
                 }
             }
