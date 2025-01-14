@@ -15,7 +15,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.arcanedex_app.ArcaneAdapter
 import com.example.arcanedex_app.R
+import com.example.arcanedex_app.data.api.RetrofitClient
+import com.example.arcanedex_app.data.models.creature.CreatureRequestAdmin
+import com.example.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AdminFragment : Fragment() {
 
@@ -23,8 +30,9 @@ class AdminFragment : Fragment() {
     private lateinit var adapter: ArcaneAdapter
     private lateinit var searchView: SearchView
     private lateinit var totalCountTextView: TextView
-    private val arcaneList = mutableListOf<String>() // Exemplo: lista de arcanes
+    private val arcaneList = mutableListOf<String>() // List of creatures' names
     private val filteredList = mutableListOf<String>()
+    private var currentPage = 1 // Current page for pagination
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,18 +44,18 @@ class AdminFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        fetchCreatures()
+
         recyclerView = view.findViewById(R.id.arcanesRecyclerView)
         searchView = view.findViewById(R.id.searchView)
         totalCountTextView = view.findViewById(R.id.totalCountTextView)
         val addButton = view.findViewById<FloatingActionButton>(R.id.addFloatingButton)
 
-        // Configura o RecyclerView
+        // Configure RecyclerView
         adapter = ArcaneAdapter(
             filteredList,
             onEditClick = { arcane, position ->
-                // Exibe o dialog para editar
                 showEditDialog(arcane) { newName, newDescription ->
-                    // Atualiza o item na lista
                     val originalPosition = arcaneList.indexOf(arcane)
                     if (originalPosition >= 0) {
                         arcaneList[originalPosition] = newName
@@ -55,13 +63,14 @@ class AdminFragment : Fragment() {
                         adapter.notifyItemChanged(position)
                         updateTotalCount()
                         Toast.makeText(
-                            requireContext(), "Arcane atualizado: $newName", Toast.LENGTH_SHORT
+                            requireContext(),
+                            "Arcane updated: $newName",
+                            Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
             },
             onDeleteClick = { arcane ->
-                // Confirmação antes de excluir
                 showDeleteConfirmationDialog(arcane) { confirmed ->
                     if (confirmed) {
                         val position = filteredList.indexOf(arcane)
@@ -71,7 +80,9 @@ class AdminFragment : Fragment() {
                             adapter.notifyItemRemoved(position)
                             updateTotalCount()
                             Toast.makeText(
-                                requireContext(), "Arcane excluído: $arcane", Toast.LENGTH_SHORT
+                                requireContext(),
+                                "Arcane deleted: $arcane",
+                                Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
@@ -82,7 +93,7 @@ class AdminFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Configurar a barra de pesquisa
+        // Configure SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 filterList(query)
@@ -97,19 +108,15 @@ class AdminFragment : Fragment() {
 
         addButton.setOnClickListener {
             showEditDialog(null) { name, description ->
-                // Adiciona o novo arcane à lista
                 arcaneList.add(name)
                 filterList(searchView.query.toString())
                 adapter.notifyItemInserted(filteredList.size - 1)
                 updateTotalCount()
-                Toast.makeText(
-                    requireContext(), "Arcane adicionado: $name", Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Arcane added: $name", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Atualiza o total de arcanes
-        updateTotalCount()
+        updateTotalCount() // Initialize total count display
     }
 
     private fun filterList(query: String?) {
@@ -124,19 +131,17 @@ class AdminFragment : Fragment() {
     }
 
     private fun updateTotalCount() {
-        totalCountTextView.text = "Total: ${arcaneList.size} criaturas"
+        totalCountTextView.text = "Total: ${arcaneList.size} creatures"
     }
 
     private fun showEditDialog(arcane: String?, onSave: (String, String) -> Unit) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_arcane, null)
-
         val arcaneNameEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneName)
         val arcaneDescriptionEditText = dialogView.findViewById<EditText>(R.id.editTextArcaneDescription)
 
-        // Preenche os campos se for edição
         arcane?.let {
             arcaneNameEditText.setText(it)
-            arcaneDescriptionEditText.setText(getString(R.string.descri_o_existente_do_arcane)) // Exemplo
+            arcaneDescriptionEditText.setText("Existing description") // Placeholder
         }
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -144,22 +149,48 @@ class AdminFragment : Fragment() {
             .setCancelable(false)
             .create()
 
-        // Configura os botões
-        dialogView.findViewById<Button>(R.id.buttonCancel).setOnClickListener {
-            dialog.dismiss() // Fecha o dialog
-        }
-
+        dialogView.findViewById<Button>(R.id.buttonCancel).setOnClickListener { dialog.dismiss() }
         dialogView.findViewById<Button>(R.id.buttonSave).setOnClickListener {
             val newName = arcaneNameEditText.text.toString().trim()
             val newDescription = arcaneDescriptionEditText.text.toString().trim()
 
             if (newName.isEmpty()) {
-                Toast.makeText(
-                    requireContext(), "O nome não pode estar vazio", Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show()
             } else {
-                onSave(newName, newDescription) // Chama o callback para salvar os dados
-                dialog.dismiss()
+                val token = SharedPreferencesHelper.getToken(requireContext())
+                if (token != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val request =
+                            CreatureRequestAdmin(Name = newName, Lore = newDescription, Img = null)
+                        val response = if (arcane == null) {
+                            RetrofitClient.instance.addCreature(request, "Bearer $token")
+                        } else {
+                            val arcaneId =
+                                arcaneList.indexOf(arcane) + 1 // Replace with real ID logic
+                            RetrofitClient.instance.editCreature(arcaneId, request, "Bearer $token")
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Saved successfully!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                fetchCreatures()
+                                dialog.dismiss()
+                            } else {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Failed: ${response.errorBody()?.string()}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -168,17 +199,46 @@ class AdminFragment : Fragment() {
 
     private fun showDeleteConfirmationDialog(arcane: String, onConfirm: (Boolean) -> Unit) {
         val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Confirmar Exclusão")
-            .setMessage("Você tem certeza que deseja excluir o arcane '$arcane'?")
-            .setPositiveButton("Sim") { _, _ ->
-                onConfirm(true)
-            }
-            .setNegativeButton("Não") { _, _ ->
-                onConfirm(false)
-            }
+            .setTitle("Confirm Deletion")
+            .setMessage("Are you sure you want to delete '$arcane'?")
+            .setPositiveButton("Yes") { _, _ -> onConfirm(true) }
+            .setNegativeButton("No") { _, _ -> onConfirm(false) }
             .setCancelable(true)
             .create()
-
         dialog.show()
+    }
+
+    private fun fetchCreatures() {
+        val token = SharedPreferencesHelper.getToken(requireContext())
+        if (token != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitClient.instance.getAllCreatures(
+                        token = "Bearer $token",
+                        page = currentPage,
+                        limit = 6,
+                        name = "",
+                        onlyFavoriteArcanes = false,
+                        toSaveOffline = false
+                    )
+                    withContext(Dispatchers.Main) {
+                        arcaneList.clear()
+                        arcaneList.addAll(response.data.map { it.Name })
+                        filterList(searchView.query.toString())
+                        updateTotalCount()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to fetch creatures",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(requireContext(), "Token is missing", Toast.LENGTH_SHORT).show()
+        }
     }
 }

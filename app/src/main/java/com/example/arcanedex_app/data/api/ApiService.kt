@@ -8,6 +8,8 @@ import com.example.arcanedex_app.data.models.RegisterRequest
 import com.example.arcanedex_app.data.models.UserProfile
 import com.example.arcanedex_app.data.models.UserProfileRequest
 import com.example.arcanedex_app.data.models.UserProfileResponse
+import com.example.arcanedex_app.data.models.creature.CreatureRequestAdmin
+import com.example.arcanedex_app.data.models.creature.CreatureResponseAdmin
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -57,4 +59,17 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") creatureId: Int
     ): Response<Unit>
+
+    @POST("/admin/creatures")
+    suspend fun addCreature(
+        @Body creature: CreatureRequestAdmin,
+        @Header("Authorization") token: String
+    ): Response<CreatureResponseAdmin>
+
+    @PUT("/admin/creatures/{id}")
+    suspend fun editCreature(
+        @Path("id") id: Int,
+        @Body creature: CreatureRequestAdmin,
+        @Header("Authorization") token: String
+    ): Response<Void>
 }
