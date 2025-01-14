@@ -43,6 +43,39 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- No Data Text -->
+
+    <!-- ImageView for No Data -->
+    <TextView
+        android:id="@+id/noDataText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/No_Data"
+        android:textAlignment="center"
+        android:textColor="@color/primary"
+        app:layout_constraintBottom_toTopOf="@id/load_more_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/no_data_image"
+        app:layout_constraintVertical_bias="0.291"
+        android:visibility="gone">
+
+    </TextView>
+
+    <ImageView
+        android:id="@+id/no_data_image"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:src="@drawable/baseline_info_24"
+        android:contentDescription="@string/sem_dados_para_mostrar"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/search_bar"
+        app:layout_constraintBottom_toTopOf="@id/load_more_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/primary" />
+
     <!-- Load More Button -->
     <Button
         android:id="@+id/load_more_button"

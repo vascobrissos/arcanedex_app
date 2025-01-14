@@ -3,6 +3,9 @@ package pt.ipt.arcanedex_app.activities
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -22,6 +25,8 @@ import kotlin.concurrent.timerTask
 class OfflineActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CardAdapter
+    private lateinit var NoDataImage:ImageView
+    private lateinit var NoDataText:TextView
     private val cardItems = mutableListOf<CardItem>()
     private var timer: Timer? = null
     private var isNavigatingToLogin = false // Evitar múltiplas transições para MainActivity
@@ -29,7 +34,10 @@ class OfflineActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_offline)
-
+        NoDataImage = findViewById(R.id.no_data_image)
+        NoDataText = findViewById(R.id.noDataText)
+        NoDataText.visibility = View.VISIBLE
+        NoDataImage.visibility = View.VISIBLE
         recyclerView = findViewById(R.id.recyclerview)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
 
@@ -57,15 +65,21 @@ class OfflineActivity : AppCompatActivity() {
     private fun loadCachedArcanes() {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(applicationContext)
-            val cachedArcanes = db.arcaneDao().getAllArcanes() // Método para buscar todos os dados
+            val cachedArcanes = db.arcaneDao().getAllArcanes()
 
             if (cachedArcanes.isEmpty()) {
-                Log.d("OfflineActivity", "Sem dados para mostrar")
+                runOnUiThread {
+                    NoDataImage.visibility = View.VISIBLE
+                    NoDataText.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
+                }
             } else {
-                Log.d("OfflineActivity", "Loaded ${cachedArcanes.size} items from cache.")
-            }
+                runOnUiThread {
+                    NoDataImage.visibility = View.GONE
+                    NoDataText.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                }
 
-            withContext(Dispatchers.Main) {
                 cardItems.clear()
                 cardItems.addAll(cachedArcanes.map { arcane ->
                     CardItem(
@@ -73,13 +87,17 @@ class OfflineActivity : AppCompatActivity() {
                         Name = arcane.name,
                         Img = arcane.img,
                         Lore = arcane.lore,
-                        isFavorite = false // No offline mode, we ignore the favorite status
+                        isFavorite = false
                     )
                 })
-                adapter.notifyDataSetChanged()
+
+                runOnUiThread {
+                    adapter.notifyDataSetChanged()
+                }
             }
         }
     }
+
 
     private fun startInternetCheck() {
         timer = Timer()

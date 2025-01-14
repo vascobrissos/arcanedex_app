@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SearchView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -155,8 +157,6 @@ class HomeFragment : Fragment() {
                     toSaveOffline = false
                 )
                 totalcountNotFavorites = response.count
-                Log.d("LoadMoreData", "Total de não favoritos: $totalcountNotFavorites")
-                Log.d("Data", "Total Dados: ${response.data}")
                 withContext(Dispatchers.Main) {
                     val newCardItems = response.data.map { creature ->
                         CardItem(
@@ -179,16 +179,14 @@ class HomeFragment : Fragment() {
                     loadingSpinner.visibility = View.GONE
 
                     if (cardItems.isEmpty()) {
-                        Toast.makeText(
-                            requireContext(),
-                            "No cards to display!",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
                     } else {
                         recyclerView.visibility = View.VISIBLE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                     }
 
-                    Log.d("CardItemSize", "Total carditem size: ${cardItems.size}")
                     loadMoreButton.visibility =
                         if (cardItems.size >= totalcountNotFavorites) View.GONE else View.VISIBLE
                 }
@@ -252,6 +250,8 @@ class HomeFragment : Fragment() {
 
     private fun performSearch(query: String?) {
         if (query.isNullOrEmpty()) {
+            view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+            view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
             refreshData()
             return
         }
@@ -259,6 +259,7 @@ class HomeFragment : Fragment() {
         loadingSpinner.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
         loadMoreButton.visibility = View.GONE
+        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE // Esconde a imagem de "Sem Dados"
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -294,7 +295,17 @@ class HomeFragment : Fragment() {
                     cardItems.addAll(searchResults)
                     adapter.notifyDataSetChanged()
 
-                    recyclerView.visibility = View.VISIBLE
+                    if (searchResults.isEmpty()) {
+                        // Mostra a imagem de "Sem Dados"
+                        recyclerView.visibility = View.GONE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
+                    } else {
+                        recyclerView.visibility = View.VISIBLE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
+                    }
+
                     loadingSpinner.visibility = View.GONE
                     loadMoreButton.visibility = View.GONE
                 }
@@ -306,7 +317,9 @@ class HomeFragment : Fragment() {
                         "Error: ${e.localizedMessage}",
                         Toast.LENGTH_LONG
                     ).show()
+                    view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
                     loadingSpinner.visibility = View.GONE
+                    view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                 }
             }
         }
@@ -351,7 +364,6 @@ class HomeFragment : Fragment() {
 
                 // Salvar na cache usando Room
                 saveToCache(newCardItems)
-                Log.d("ArcaneDao", "Inserting data: $newCardItems")
 
                 withContext(Dispatchers.Main) {
                     isOfflineDataFetched = true // Marca como feito para a sessão atual

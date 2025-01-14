@@ -26,6 +26,8 @@ import pt.ipt.arcanedex_app.data.utils.SharedPreferencesHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -38,6 +40,7 @@ class AdminFragment : Fragment() {
     private lateinit var searchView: SearchView
     private lateinit var totalCountTextView: TextView
     private lateinit var loadMoreButton: Button
+    private var searchJob: Job? = null
     private val arcaneList = mutableListOf<Arcane>()
     private var currentPage = 1
     private val pageSize = 6
@@ -89,7 +92,11 @@ class AdminFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                fetchCreatures(searchQuery = newText)
+                searchJob?.cancel() // Cancela a pesquisa anterior, se estiver em andamento
+                searchJob = CoroutineScope(Dispatchers.Main).launch {
+                    delay(300) // Atraso de 300ms
+                    fetchCreatures(searchQuery = newText)
+                }
                 return true
             }
         })
@@ -124,6 +131,14 @@ class AdminFragment : Fragment() {
 
     // === Manipulação de Criaturas ===
     private fun fetchCreatures(loadMore: Boolean = false, searchQuery: String? = null) {
+
+        view?.findViewById<ProgressBar>(R.id.loading_spinner)?.visibility = View.VISIBLE
+        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
+        recyclerView.visibility = View.GONE
+        loadMoreButton.visibility = View.GONE
+        view?.findViewById<FloatingActionButton>(R.id.addFloatingButton)?.visibility = View.GONE
+
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token != null) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -154,10 +169,24 @@ class AdminFragment : Fragment() {
                             }
 
                             adapter.notifyDataSetChanged()
+
+                            view?.findViewById<ProgressBar>(R.id.loading_spinner)?.visibility = View.GONE
+                            if (arcaneList.isEmpty()) {
+                                view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
+                                view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
+
+                            } else {
+                                recyclerView.visibility = View.VISIBLE
+                                view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                                view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
+                            }
+                            view?.findViewById<FloatingActionButton>(R.id.addFloatingButton)?.visibility = View.VISIBLE
                             totalCreaturesCount = responseData?.totalCount ?: 0
                             if (!loadMore) currentPage = 1
                             currentPage++
 
+                            loadMoreButton.visibility =
+                                if (arcaneList.size >= totalCreaturesCount) View.GONE else View.VISIBLE
                             updateTotalCount()
                             toggleLoadMoreButton()
                         } else {

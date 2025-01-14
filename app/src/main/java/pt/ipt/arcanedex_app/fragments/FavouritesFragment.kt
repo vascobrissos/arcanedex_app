@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SearchView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -150,7 +152,6 @@ class FavouritesFragment : Fragment() {
                     toSaveOffline = false
                 )
 
-                Log.d("LoadFavourites", "Response: ${response.data}")
 
                 withContext(Dispatchers.Main) {
                     val newCardItems = response.data.map { creature ->
@@ -172,13 +173,12 @@ class FavouritesFragment : Fragment() {
                     loadingSpinner.visibility = View.GONE
 
                     if (cardItems.isEmpty()) {
-                        Toast.makeText(
-                            requireContext(),
-                            "No favorites to display!",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
                     } else {
                         recyclerView.visibility = View.VISIBLE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                     }
 
                     loadMoreButton.visibility =
@@ -201,6 +201,8 @@ class FavouritesFragment : Fragment() {
 
     private fun performSearch(query: String?) {
         if (query.isNullOrEmpty()) {
+            view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+            view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
             refreshData()
             return
         }
@@ -248,6 +250,18 @@ class FavouritesFragment : Fragment() {
                     cardItems.addAll(searchResults)
                     adapter.notifyDataSetChanged()
 
+
+                    if (searchResults.isEmpty()) {
+                        // Mostra a imagem de "Sem Dados"
+                        recyclerView.visibility = View.GONE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.VISIBLE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.VISIBLE
+                    } else {
+                        recyclerView.visibility = View.VISIBLE
+                        view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                        view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
+                    }
+
                     recyclerView.visibility = View.VISIBLE
                     loadingSpinner.visibility = View.GONE
                     loadMoreButton.visibility = View.GONE // Garante que o botão não reapareça
@@ -261,6 +275,8 @@ class FavouritesFragment : Fragment() {
                         Toast.LENGTH_LONG
                     ).show()
                     loadingSpinner.visibility = View.GONE
+                    view?.findViewById<ImageView>(R.id.no_data_image)?.visibility = View.GONE
+                    view?.findViewById<TextView>(R.id.noDataText)?.visibility = View.GONE
                 }
             }
         }
