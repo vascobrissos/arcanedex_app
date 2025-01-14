@@ -87,7 +87,7 @@ class Register : AppCompatActivity() {
         if (!SharedPreferencesHelper.isPasswordValid(password)) {
             Toast.makeText(
                 this,
-                "Password must be at least 8 characters long and contain a special character.",
+                "Password tem de conter 8 caracteres e um símbolo especial!",
                 Toast.LENGTH_SHORT
             ).show()
 

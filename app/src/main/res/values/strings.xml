@@ -15,9 +15,6 @@
     <string name="alreadyHasAccount">Já tens conta? Inicia sessão!</string>
     <string name="male">Masculino</string>
     <string name="female">Feminino</string>
-    <string name="searchArcane">Pesquisar Arcane</string>
-
-
     <string name="privacyPolicy">
         A sua privacidade é importante para nós. Este documento descreve como recolhemos, utilizamos e protegemos as suas informações pessoais. Ao utilizar esta aplicação, está a aceitar os termos aqui descritos. Recolha de Dados:
         Recolhemos informações fornecidas voluntariamente, como nome, endereço de e-mail e outros detalhes necessários para criar e gerir a sua conta. Além disso, podemos recolher dados de utilização, como informações sobre como utiliza a aplicação.
@@ -34,4 +31,31 @@
     <string name="about_us">Sobre nós</string>
     <string name="sem_dados_para_mostrar">Sem dados para mostrar</string>
     <string name="No_Data">Sem dados</string>
+    <string name="telmo">Telmo Gonçalves\nnº 22914</string>
+    <string name="vasco">Vasco Brissos Alves\nnº 23193</string>
+    <string name="disciplina">Disciplina: Desenvolvimento de Aplicações Móveis\nCurso: Licenciatura em Engenharia Informática 2024/2025</string>
+    <string name="librariesUsed">Bibliotecas e Frameworks usados:\n• Retrofit\n• Glide\n• Auth0 JWT\n• ConstraintLayout\n• Material Design Components\n• AndroidX Libraries</string>
+    <string name="close">Fechar</string>
+    <string name="nome_do_arcane">Nome do Arcane</string>
+    <string name="description">Descrição</string>
+    <string name="image_preview">Image Preview</string>
+    <string name="select_image">Selecionar Imagem</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="searchCreatures">Pesquisar Criaturas</string>
+    <string name="searchArcane">Pesquisar Arcane</string>
+    <string name="totalCreatures">Total: 0 Criaturas</string>
+    <string name="add">Adicionar</string>
+    <string name="settings">Definições</string>
+    <string name="editData">Editar Dados</string>
+    <string name="exemplousername">ExemploUsername</string>
+    <string name="guardar">Guardar</string>
+    <string name="arrow_icon">Icon Seta</string>
+    <string name="deleteAccount">Eliminar Conta</string>
+    <string name="endSession">Terminar Sessão</string>
+    <string name="arcaneName">Nome do Arcane</string>
+    <string name="edit">Editar</string>
+    <string name="card_image">Imagem Cartão</string>
+    <string name="titleCard">Título</string>
+    <string name="favorite_icon">Icon Favorito</string>
 </resources>

@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Verifica se o usuário aceitou os termos
+        // Verifica se o utilizador aceitou os termos
         if (!SharedPreferencesHelper.hasAcceptedTerms(this)) {
             val intent = Intent(this, PrivacyPolicyAgreement::class.java)
             startActivity(intent)

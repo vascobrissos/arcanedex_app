@@ -1,7 +1,6 @@
 package pt.ipt.arcanedex_app.activities
 
 import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
@@ -27,7 +26,7 @@ class Home : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragments) as NavHostFragment
         val navController = navHostFragment.navController
-        val isAdmin = SharedPreferencesHelper.isUserAdmin(this) // Verificar se o usuário é admin
+        val isAdmin = SharedPreferencesHelper.isUserAdmin(this) // Verificar se o utilizador é admin
 
         // Configure o BottomNavigationView
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
@@ -66,7 +65,7 @@ class Home : AppCompatActivity() {
         networkReceiver = object : NetworkReceiver() {
             override fun onNetworkChange(isConnected: Boolean) {
                 if (!isConnected) {
-                    Toast.makeText(this@Home, "Sem conexão à internet", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@Home, "Sem ligação à internet", Toast.LENGTH_SHORT).show()
                     SharedPreferencesHelper.clearToken(this@Home) // Limpa o token
                     val intent = Intent(this@Home, OfflineActivity::class.java)
                     startActivity(intent)

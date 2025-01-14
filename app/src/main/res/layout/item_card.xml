@@ -19,14 +19,14 @@
             android:layout_width="match_parent"
             android:layout_height="150dp"
             android:scaleType="centerInside"
-            android:contentDescription="Card Image" />
+            android:contentDescription="@string/card_image" />
 
         <!-- Nome -->
         <TextView
             android:id="@+id/titleCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Title"
+            android:text="@string/titleCard"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
@@ -44,7 +44,7 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:layout_margin="8dp"
-            android:contentDescription="Favorite Icon"
+            android:contentDescription="@string/favorite_icon"
             android:src="@drawable/baseline_star_border_24"
             app:tint="@color/golden" />
     </RelativeLayout>

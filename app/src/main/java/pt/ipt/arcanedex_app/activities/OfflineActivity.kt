@@ -48,7 +48,7 @@ class OfflineActivity : AppCompatActivity() {
                 Log.d("OfflineActivity", "Clicked on: ${clickedItem.Name}")
             },
             onFavoriteToggle = {
-                Toast.makeText(this, "Favorites can't be toggled offline", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Não pode favoritar enquanto offline", Toast.LENGTH_SHORT).show()
             },
             showFavorites = false // Desativa as estrelas no modo offline
         )

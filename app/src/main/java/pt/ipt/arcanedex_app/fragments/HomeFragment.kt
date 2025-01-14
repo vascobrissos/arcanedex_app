@@ -142,7 +142,7 @@ class HomeFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
                     }
                     isLoading = false
                     return@launch
@@ -208,7 +208,7 @@ class HomeFragment : Fragment() {
     private fun toggleFavorite(creatureId: Int) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
-            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -220,12 +220,12 @@ class HomeFragment : Fragment() {
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        Toast.makeText(requireContext(), "Updated favorites", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Favoritos Atualizado!", Toast.LENGTH_SHORT).show()
                         refreshData() // Refresh non-favorites after toggling
                     } else {
                         Toast.makeText(
                             requireContext(),
-                            "Failed to update favorites: ${response.message()}",
+                            "Falha na atualização de favoritos: ${response.message()}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -266,7 +266,7 @@ class HomeFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }
@@ -327,7 +327,7 @@ class HomeFragment : Fragment() {
 
     private fun saveDataOfflineOnce() {
         if (isOfflineDataFetched) {
-            Toast.makeText(requireContext(), "Offline data already fetched in this session.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Data para offline já foi obtida", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -338,7 +338,7 @@ class HomeFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }

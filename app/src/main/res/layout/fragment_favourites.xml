@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:queryHint="Pesquisar Arcane"
+        android:queryHint="@string/searchArcane"
         android:iconifiedByDefault="false"
         android:background="?attr/selectableItemBackground"
         app:layout_constraintTop_toTopOf="parent"

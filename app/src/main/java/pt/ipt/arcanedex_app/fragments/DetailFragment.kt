@@ -109,8 +109,8 @@ class DetailFragment : Fragment() {
             val token = SharedPreferencesHelper.getToken(requireContext())
             if (token == null) return@setOnClickListener
 
-            AlertDialog.Builder(requireContext()).setTitle("Remove fundo")
-                .setMessage("Tens a certeza que queres remover o fundo?")
+            AlertDialog.Builder(requireContext()).setTitle("Remover Fundo")
+                .setMessage("Tem a certeza que pretende remover o fundo?")
                 .setPositiveButton("Sim") { _, _ ->
                     resetBackgroundToDefault(cardItem.Id, token)
                 }.setNegativeButton("Não", null).show()
@@ -127,7 +127,7 @@ class DetailFragment : Fragment() {
     private fun fetchAndApplyBackground(creatureId: Int, imageView: ImageView) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
-            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -166,7 +166,7 @@ class DetailFragment : Fragment() {
                     if (response.isSuccessful) {
                         Toast.makeText(
                             requireContext(),
-                            "Fundo resetado com sucesso!",
+                            "Fundo eliminado!",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -220,7 +220,7 @@ class DetailFragment : Fragment() {
                 startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE)
             }
         } else {
-            Toast.makeText(requireContext(), "Câmera não encontrada", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Câmara não encontrada", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -247,7 +247,7 @@ class DetailFragment : Fragment() {
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "É preciso permissão para usar a câmera",
+                    "É necessário permissão para utilizar a câmara",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -292,7 +292,7 @@ class DetailFragment : Fragment() {
         val cardItem = sharedCardItemViewModel.selectedCardItem
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null || cardItem == null) {
-            Toast.makeText(requireContext(), "Missing data for API call", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Dados em falta para API", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -312,7 +312,7 @@ class DetailFragment : Fragment() {
                     if (response.isSuccessful) {
                         Toast.makeText(
                             requireContext(),
-                            "Background atualizado com sucesso!",
+                            "Fundo atualizado com sucesso!",
                             Toast.LENGTH_SHORT
                         ).show()
                         applyBackgroundWithGlide(backgroundImg, view)
@@ -321,7 +321,7 @@ class DetailFragment : Fragment() {
                         Log.e("API Error", errorMessage)
                         Toast.makeText(
                             requireContext(),
-                            "Erro ao atualizar o background: $errorMessage",
+                            "Erro ao atualizar o fundo: $errorMessage",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

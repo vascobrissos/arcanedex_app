@@ -49,7 +49,7 @@ class ProfileFragment : Fragment() {
             Log.d("ProfileFragment", "Token: $token")
             profileViewModel.loadUserProfile(token)
         } else {
-            Toast.makeText(context, "User not logged in!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
         }
 
 
@@ -73,11 +73,11 @@ class ProfileFragment : Fragment() {
         // Observe the update status
         profileViewModel.updateStatus.observe(viewLifecycleOwner) { result ->
             result.onSuccess {
-                Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Perfil Atualizado!", Toast.LENGTH_SHORT).show()
             }.onFailure {
                 Toast.makeText(
                     context,
-                    "Failed to update profile: ${it.message}",
+                    "Falha a atualizar perfil: ${it.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -92,7 +92,7 @@ class ProfileFragment : Fragment() {
                 if (password.isNotEmpty() && !SharedPreferencesHelper.isPasswordValid(password)) {
                     Toast.makeText(
                         context,
-                        "Password must be at least 8 characters long and contain a special character.",
+                        "Password tem de conter 8 caracteres e um símbolo especial!",
                         Toast.LENGTH_SHORT
                     ).show()
                     return@setOnClickListener
@@ -109,7 +109,7 @@ class ProfileFragment : Fragment() {
 
                 profileViewModel.updateUserProfile(token, userProfile)
             } else {
-                Toast.makeText(context, "User not logged in!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
             }
         }
 

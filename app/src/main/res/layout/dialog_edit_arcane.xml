@@ -16,7 +16,7 @@
             android:id="@+id/editTextArcaneName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="Nome do Arcane"
+            android:hint="@string/nome_do_arcane"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="top"
-            android:hint="Descrição"
+            android:hint="@string/description"
             android:inputType="textMultiLine"
             android:minHeight="100dp"
             android:padding="12dp"
@@ -46,7 +46,7 @@
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_marginTop="16dp"
-            android:contentDescription="Image Preview"
+            android:contentDescription="@string/image_preview"
             android:scaleType="centerInside"
             app:layout_constraintTop_toBottomOf="@id/editTextArcaneDescription"
             app:layout_constraintStart_toStartOf="parent"
@@ -58,7 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Select Image"
+            android:text="@string/select_image"
             app:layout_constraintTop_toBottomOf="@id/imagePreview"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -78,7 +78,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Cancelar"
+                android:text="@string/cancel"
                 android:backgroundTint="@color/primary" />
 
             <Button
@@ -86,7 +86,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Salvar"
+                android:text="@string/save"
                 android:backgroundTint="@color/primary" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

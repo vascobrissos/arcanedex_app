@@ -136,7 +136,7 @@ class FavouritesFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT)
                             .show()
                     }
                     isLoading = false
@@ -220,7 +220,7 @@ class FavouritesFragment : Fragment() {
                 val token = SharedPreferencesHelper.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT)
+                        Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT)
                             .show()
                     }
                     return@launch
@@ -292,7 +292,7 @@ class FavouritesFragment : Fragment() {
     private fun removeFavorite(creatureId: Int) {
         val token = SharedPreferencesHelper.getToken(requireContext())
         if (token == null) {
-            Toast.makeText(requireContext(), "User not logged in!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Utilizador sem sessão iniciada!", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -307,14 +307,14 @@ class FavouritesFragment : Fragment() {
                     if (response.isSuccessful) {
                         Toast.makeText(
                             requireContext(),
-                            "Removed from favorites",
+                            "Removido dos Favoritos",
                             Toast.LENGTH_SHORT
                         ).show()
                         refreshData()
                     } else {
                         Toast.makeText(
                             requireContext(),
-                            "Failed to remove from favorites: ${response.message()}",
+                            "Falha ao remover dos favoritos: ${response.message()}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

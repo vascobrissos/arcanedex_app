@@ -55,7 +55,7 @@ class SettingsFragment : Fragment() {
         }
 
         logoutButton.setOnClickListener {
-            Toast.makeText(context, "Logout realizado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Terminou Sessão", Toast.LENGTH_SHORT).show()
             logoutUser()
         }
 
@@ -88,7 +88,7 @@ class SettingsFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             requireContext(),
-                            "Usuário não está autenticado!",
+                            "Utilizador não está autenticado!",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
